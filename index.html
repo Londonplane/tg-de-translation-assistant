@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中德翻译助手</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>🇩🇪 中德翻译助手</h1>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn active" data-module="cn-to-de">
+                    <span class="nav-icon">🇨🇳➡️🇩🇪</span>
+                    <span class="nav-text">中译德</span>
+                </button>
+                <button class="nav-btn" data-module="de-to-cn">
+                    <span class="nav-icon">🇩🇪➡️🇨🇳</span>
+                    <span class="nav-text">德译中</span>
+                </button>
+                <button class="nav-btn" data-module="du-sie">
+                    <span class="nav-icon">👤↔️</span>
+                    <span class="nav-text">你/您切换</span>
+                </button>
+                <button class="nav-btn" data-module="grammar-check">
+                    <span class="nav-icon">✏️</span>
+                    <span class="nav-text">德语检查</span>
+                </button>
+                <button class="nav-btn" data-module="assistant">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-text">德语助手</span>
+                </button>
+            </div>
+        </nav>
+
+
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 模块1: 中译德 -->
+            <div id="cn-to-de" class="module active">
+                <div class="module-header">
+                    <h2>中文翻译成德语</h2>
+                    <p class="module-desc">选择角色和场景，获得精准的德语翻译</p>
+                </div>
+                
+                <div class="content-grid">
+                    <div class="input-section">
+                        <label for="cn-input">中文文本</label>
+                        <textarea id="cn-input" placeholder="请输入要翻译的中文内容..."></textarea>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="setting-group">
+                            <label>选择翻译角色</label>
+                            <div class="radio-group">
+                                <label class="radio-option" title="正式、专业的德语，适合学术化、清晰、无情绪色彩的金融解释">
+                                    <input type="radio" name="role" value="professor" checked>
+                                    <span>🎓 教授</span>
+                                </label>
+                                <label class="radio-option" title="亲切自然的德语，语气年轻女性化，适合日常口语交流">
+                                    <input type="radio" name="role" value="assistant-25">
+                                    <span>👩‍🎓 25岁女助理</span>
+                                </label>
+                                <label class="radio-option" title="成熟稳重的德语，语气平和可信，适合引导性讨论">
+                                    <input type="radio" name="role" value="assistant-35">
+                                    <span>👩‍💼 35岁女助理</span>
+                                </label>
+                                <label class="radio-option" title="简洁正式的德语公告风格，适合发布重要信息">
+                                    <input type="radio" name="role" value="announcement-assistant">
+                                    <span>📢 公告女助理</span>
+                                </label>
+                                <label class="radio-option" title="自然流畅的德语口语，语气正常平和，适合日常交流">
+                                    <input type="radio" name="role" value="troll-1">
+                                    <span>🗣️ 水军1号(普通型)</span>
+                                </label>
+                                <label class="radio-option" title="基础口语化的德语，语气夸张热情，适合吸引注意力">
+                                    <input type="radio" name="role" value="troll-2">
+                                    <span>🗣️ 水军2号(情绪型)</span>
+                                </label>
+                                <label class="radio-option" title="互动性强的德语，多用疑问句，适合引发讨论">
+                                    <input type="radio" name="role" value="troll-3">
+                                    <span>🗣️ 水军3号(引导型)</span>
+                                </label>
+                                <label class="radio-option" title="煽动性、夸张且情绪化的德语，适合制造争议">
+                                    <input type="radio" name="role" value="troll-4">
+                                    <span>🗣️ 水军4号(煽动型)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="output-section">
+                        <div class="output-group">
+                            <label>德语译文</label>
+                            <textarea id="de-output" readonly placeholder="德语翻译结果将显示在这里..."></textarea>
+                            <div id="pronoun-info" class="pronoun-info"></div>
+                        </div>
+
+                        <div class="output-group">
+                            <label>回译检查</label>
+                            <textarea id="back-translation" readonly placeholder="德语回译成中文的结果..."></textarea>
+                            <div id="back-translation-note" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
+                        </div>
+                    </div>
+
+                    <div class="action-section">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="translate-btn">
+                                <span class="btn-icon">🔄</span>
+                                翻译
+                            </button>
+                            <button class="btn btn-secondary" id="clear-btn">
+                                <span class="btn-icon">🗑️</span>
+                                清空
+                            </button>
+                            <button class="btn btn-secondary" id="retranslate-btn">
+                                <span class="btn-icon">🔄</span>
+                                重新翻译
+                            </button>
+                            <button class="btn btn-secondary" id="du-sie-switch-btn" disabled>
+                                <span class="btn-icon">🔄</span>
+                                你您切换
+                            </button>
+                        </div>
+                        
+                        <div class="copy-group">
+                            <label>一键复制</label>
+                            <div class="btn-group">
+                                <button class="btn btn-outline" id="copy-original">原文</button>
+                                <button class="btn btn-outline" id="copy-translation">译文</button>
+                                <button class="btn btn-outline" id="copy-both">原文+译文</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模块2: 德译中 -->
+            <div id="de-to-cn" class="module">
+                <div class="module-header">
+                    <h2>德语翻译成中文</h2>
+                    <p class="module-desc">将德语文本翻译成中文</p>
+                </div>
+                
+                <div class="content-simple">
+                    <div class="input-section">
+                        <label for="de-input">德语文本</label>
+                        <textarea id="de-input" placeholder="请输入要翻译的德语内容..."></textarea>
+                    </div>
+
+                    <div class="output-section">
+                        <label>中文译文</label>
+                        <textarea id="cn-output" readonly placeholder="中文翻译结果将显示在这里..."></textarea>
+                    </div>
+
+                    <div class="action-section">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="de-to-cn-translate">
+                                <span class="btn-icon">🔄</span>
+                                翻译
+                            </button>
+                            <button class="btn btn-secondary" id="de-to-cn-retranslate">
+                                <span class="btn-icon">🔄</span>
+                                重新翻译
+                            </button>
+                            <button class="btn btn-outline" id="de-to-cn-copy">
+                                <span class="btn-icon">📋</span>
+                                复制译文
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模块3: Du/Sie切换 -->
+            <div id="du-sie" class="module">
+                <div class="module-header">
+                    <h2>你/您切换 (Du/Sie)</h2>
+                    <p class="module-desc">Du(你): du/dir/dich/deine | Sie(您): Sie/Ihnen/Sie/Ihre</p>
+                </div>
+                
+                <div class="content-simple">
+                    <div class="input-section">
+                        <label for="du-sie-input">德语文本</label>
+                        <textarea id="du-sie-input" placeholder="请输入要转换的德语文本..."></textarea>
+                    </div>
+
+                    <div class="output-section">
+                        <label>转换结果</label>
+                        <textarea id="du-sie-output" readonly placeholder="转换结果将显示在这里..."></textarea>
+                    </div>
+
+                    <div class="action-section">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="convert-to-du">
+                                <span class="btn-icon">👤</span>
+                                转换为 Du (你)
+                            </button>
+                            <button class="btn btn-primary" id="convert-to-sie">
+                                <span class="btn-icon">👥</span>
+                                转换为 Sie (您)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模块4: 德语检查 -->
+            <div id="grammar-check" class="module">
+                <div class="module-header">
+                    <h2>德语文本检查</h2>
+                    <p class="module-desc">AI 语法检查和表达优化</p>
+                </div>
+                
+                <div class="content-simple">
+                    <div class="input-section">
+                        <label for="grammar-input">德语文本</label>
+                        <textarea id="grammar-input" placeholder="请输入要检查的德语文本..."></textarea>
+                        
+                        <label for="grammar-chinese-input">中文文本（可选）</label>
+                        <textarea id="grammar-chinese-input" placeholder="如果需要对比翻译，请输入对应的中文文本..."></textarea>
+                    </div>
+
+                    <div class="output-section">
+                        <label>检查结果</label>
+                        <div id="grammar-result" class="grammar-result"></div>
+                    </div>
+
+                    <div class="action-section">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="check-grammar">
+                                <span class="btn-icon">✏️</span>
+                                检查文本
+                            </button>
+                            <button class="btn btn-secondary" id="clear-grammar">
+                                <span class="btn-icon">🗑️</span>
+                                清空
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模块5: 德语助手 -->
+            <div id="assistant" class="module">
+                <div class="module-header">
+                    <h2>德语小助手</h2>
+                    <p class="module-desc">德语语法解释、词汇查询、文化背景知识</p>
+                </div>
+                
+                <div class="content-simple">
+                    <div class="input-section">
+                        <label for="assistant-input">您的问题</label>
+                        <textarea id="assistant-input" placeholder="请输入问题，暂只支持文本.."></textarea>
+                    </div>
+
+                    <div class="output-section">
+                        <label>AI助手回答</label>
+                        <div id="assistant-result" class="assistant-result"></div>
+                    </div>
+
+                    <div class="action-section">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="ask-assistant">
+                                <span class="btn-icon">🤖</span>
+                                询问助手
+                            </button>
+                            <button class="btn btn-outline" id="copy-assistant-answer">
+                                <span class="btn-icon">📋</span>
+                                复制回答
+                            </button>
+                            <button class="btn btn-secondary" id="clear-assistant">
+                                <span class="btn-icon">🗑️</span>
+                                清空
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 加载提示 -->
+        <div id="loading" class="loading hidden">
+            <div class="loading-spinner"></div>
+            <span>处理中...</span>
+        </div>
+
+        <!-- API配置模态框 -->
+        <div id="api-config-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔌 API配置</h3>
+                    <button class="close-btn" id="close-api-config">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="config-group">
+                        <label for="user-select">选择用户配置</label>
+                        <select id="user-select" class="user-select">
+                            <option value="">请选择用户配置...</option>
+                        </select>
+                        <div class="user-actions">
+                            <button class="btn btn-outline btn-small" id="add-user-btn">+ 添加配置</button>
+                            <button class="btn btn-outline btn-small" id="edit-user-btn" disabled>✏️ 编辑配置</button>
+                        </div>
+                        <small>💡 提示：添加或更新配置后，再进行测试连接</small>
+                    </div>
+                    
+                    <div class="config-group user-config" id="user-config" style="display: none;">
+                        <label for="user-name">用户标识</label>
+                        <input type="text" id="user-name" placeholder="输入您的姓名或工号（例如：张三/EMP001）">
+                        
+                        <label for="api-key">OpenRouter API Key</label>
+                        <div class="input-with-copy">
+                            <input type="password" id="api-key" placeholder="请输入管理员为您分配的OpenRouter API密钥">
+                            <button type="button" class="copy-btn" id="copy-openrouter-key" title="复制API密钥">📋</button>
+                            <button type="button" class="show-hide-btn" id="toggle-openrouter-key" title="显示/隐藏密钥">👁️</button>
+                        </div>
+                        <small>⚠️ 用于AI翻译和语法检查功能</small>
+                        
+                        <label for="deepl-api-key">DeepL API Key <span style="color: #9ca3af;">(可选)</span></label>
+                        <div class="input-with-copy">
+                            <input type="password" id="deepl-api-key" placeholder="请输入您的DeepL API密钥（用于回译验证，可选）">
+                            <button type="button" class="copy-btn" id="copy-deepl-key" title="复制API密钥">📋</button>
+                            <button type="button" class="show-hide-btn" id="toggle-deepl-key" title="显示/隐藏密钥">👁️</button>
+                        </div>
+                        <small>💡 可选配置：用于专业回译验证功能。未配置时将使用AI回译 | <a href="https://www.deepl.com/account/summary" target="_blank" style="color: #2563eb;">获取API密钥</a></small>
+                    </div>
+                    
+                    <div class="config-group">
+                        <label>当前用户状态</label>
+                        <div class="current-user-info">
+                            <div class="user-info-item">
+                                <span class="info-label">当前用户:</span>
+                                <span id="current-user-name">未选择</span>
+                            </div>
+                            <div class="user-info-item">
+                                <span class="info-label">API状态:</span>
+                                <span id="current-api-status">⚪ 未配置</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-group">
+                        <label>API服务状态</label>
+                        <div class="model-status">
+                            <div class="status-item">
+                                <span class="model-name">OpenRouter API (翻译功能)</span>
+                                <span class="status-indicator" id="openrouter-status">⚪ 未配置</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="model-name">DeepL API (回译验证)</span>
+                                <span class="status-indicator" id="deepl-status">⚪ 未配置</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-group">
+                        <label>用户管理</label>
+                        <div class="user-management">
+                            <button class="btn btn-outline btn-small" id="delete-user-btn" disabled>删除当前用户</button>
+                            <button class="btn btn-outline btn-small" id="export-users-btn">导出用户配置</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="test-api">测试连接</button>
+                    <button class="btn btn-primary" id="save-api-config">保存配置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- API配置按钮 -->
+        <button id="api-config-btn" class="floating-config-btn" title="API配置">
+            <span class="config-icon">⚙️</span>
+        </button>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="prompts-config.js"></script>
+    <script src="script.js"></script>
+    <script src="api-integration.js"></script>
+</body>
+</html> 

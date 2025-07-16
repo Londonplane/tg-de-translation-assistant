@@ -1,0 +1,60 @@
+# 依赖和包管理
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# 环境配置
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE和编辑器
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 构建输出 (GitHub Actions会处理)
+build/
+dist/
+
+# 备份文件
+*.backup
+*.bak
+
+# API密钥和敏感信息（注意：我们的config.js需要提交，因为它不包含真实密钥）
+# config.js 文件需要提交，因为它只包含Supabase URL模板
+
+# Supabase本地文件
+.supabase/
+
+# 测试覆盖率
+coverage/
+
+# 其他
+*.pid
+*.seed
+*.pid.lock 
