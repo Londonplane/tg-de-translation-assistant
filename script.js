@@ -2,6 +2,7 @@
 class TranslationApp {
     constructor() {
         this.currentModule = 'cn-to-de';
+        this.debounceTimer = null; // 德语译文编辑防抖定时器
         this.init();
     }
 
@@ -63,19 +64,37 @@ class TranslationApp {
         const translateBtn = document.getElementById('translate-btn');
         const retranslateBtn = document.getElementById('retranslate-btn');
         const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
+        const removeDashBtn = document.getElementById('remove-dash-btn');
         const clearBtn = document.getElementById('clear-btn');
         const copyOriginal = document.getElementById('copy-original');
         const copyTranslation = document.getElementById('copy-translation');
         const copyBoth = document.getElementById('copy-both');
+        const deOutput = document.getElementById('de-output');
 
         translateBtn?.addEventListener('click', () => this.handleCnToDeTranslation());
         retranslateBtn?.addEventListener('click', () => this.handleCnToDeTranslation());
         duSieSwitchBtn?.addEventListener('click', () => this.handleDuSieSwitch());
+        removeDashBtn?.addEventListener('click', () => this.handleRemoveDash());
         clearBtn?.addEventListener('click', () => this.clearCnToDeFields());
         
         copyOriginal?.addEventListener('click', () => this.copyToClipboard('cn-input'));
         copyTranslation?.addEventListener('click', () => this.copyToClipboard('de-output'));
         copyBoth?.addEventListener('click', () => this.copyBoth());
+
+        // 德语译文编辑监听（延迟检测）
+        if (deOutput) {
+            deOutput.addEventListener('input', () => {
+                // 清除之前的定时器
+                if (this.debounceTimer) {
+                    clearTimeout(this.debounceTimer);
+                }
+                
+                // 设置1秒延迟，用户停止输入后触发回译
+                this.debounceTimer = setTimeout(() => {
+                    this.handleGermanTextEdit();
+                }, 1000);
+            });
+        }
     }
 
     // 德译中模块事件
@@ -118,6 +137,44 @@ class TranslationApp {
         clearBtn?.addEventListener('click', () => this.clearAssistantFields());
     }
 
+    // 德语文本编辑处理（自动回译）
+    async handleGermanTextEdit() {
+        const deOutput = document.getElementById('de-output').value.trim();
+        if (!deOutput) {
+            return; // 如果德语译文为空，不执行回译
+        }
+
+        // 检查API是否已配置
+        if (!window.apiIntegration || !window.apiIntegration.isConfigured()) {
+            return; // 静默返回，不显示错误消息
+        }
+
+        try {
+            // 更新人称检测
+            const pronounType = window.apiIntegration.detectPronounUsage(deOutput);
+            const pronounInfo = document.getElementById('pronoun-info');
+            if (pronounInfo) {
+                pronounInfo.textContent = `德语译文使用的是：${pronounType}`;
+                pronounInfo.style.display = 'block';
+            }
+
+            // 执行回译检查
+            const backTranslation = await window.apiIntegration.translateGermanToChinese(deOutput);
+            document.getElementById('back-translation').value = backTranslation;
+            
+            // 显示回译备注
+            const backTranslationNote = document.getElementById('back-translation-note');
+            if (backTranslationNote) {
+                backTranslationNote.style.display = 'block';
+            }
+
+            // 静默更新，不显示成功消息，避免干扰用户编辑
+        } catch (error) {
+            console.warn('自动回译失败:', error);
+            // 静默处理错误，不影响用户编辑体验
+        }
+    }
+
     // 中译德翻译处理
     async handleCnToDeTranslation() {
         const cnInput = document.getElementById('cn-input').value.trim();
@@ -157,10 +214,14 @@ class TranslationApp {
                 backTranslationNote.style.display = 'block';
             }
             
-            // 启用"你您切换"按钮
+            // 启用"你您切换"和"去短横线"按钮
             const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
             if (duSieSwitchBtn) {
                 duSieSwitchBtn.disabled = false;
+            }
+            const removeDashBtn = document.getElementById('remove-dash-btn');
+            if (removeDashBtn) {
+                removeDashBtn.disabled = false;
             }
             
             this.showMessage(`翻译完成！使用模型：${result.model}`, 'success');
@@ -335,6 +396,103 @@ ${deOutput}
         } catch (error) {
             this.showMessage(`Du/Sie转换失败：${error.message}`, 'error');
             console.error('Du/Sie Switch Error:', error);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    // 去短横线处理
+    async handleRemoveDash() {
+        const deOutput = document.getElementById('de-output').value.trim();
+        if (!deOutput) {
+            this.showMessage('没有德语译文可以处理', 'error');
+            return;
+        }
+
+        // 检查API是否已配置
+        if (!window.apiIntegration || !window.apiIntegration.isConfigured()) {
+            this.showMessage('请先配置API密钥', 'error');
+            setTimeout(() => {
+                window.apiIntegration?.showAPIConfig();
+            }, 1000);
+            return;
+        }
+
+        this.showLoading(true);
+
+        try {
+            // 使用OpenRouter API去掉短横线
+            const apiKey = window.apiIntegration.getCurrentApiKey();
+            
+            const prompt = `请去掉以下德语文本中的短横线符号（–, —, -）换成逗号，保持其他内容完全不变。仅去除作为连接符或破折号的短横线，不要去除复合词中的连字符。
+
+德语文本：
+${deOutput}
+
+请只返回处理后的德语文本，不要添加任何解释。`;
+
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'Chinese-German-Translation-Assistant-Remove-Dash'
+                },
+                body: JSON.stringify({
+                    model: 'google/gemini-2.5-flash',
+                    messages: [{
+                        role: 'user',
+                        content: prompt
+                    }],
+                    temperature: 0.3,
+                    max_tokens: 1000
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`API请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error('API返回数据格式错误');
+            }
+
+            const processedText = data.choices[0].message.content.trim();
+            
+            // 更新德语译文
+            document.getElementById('de-output').value = processedText;
+            
+            // 保持人称信息显示
+            const pronounInfo = document.getElementById('pronoun-info');
+            if (pronounInfo.style.display !== 'none') {
+                const currentPronounType = window.apiIntegration.detectPronounUsage(processedText);
+                pronounInfo.textContent = `德语译文使用的是：${currentPronounType}`;
+            }
+            
+            // 确保回译备注显示
+            const backTranslationNote = document.getElementById('back-translation-note');
+            if (backTranslationNote) {
+                backTranslationNote.style.display = 'block';
+            }
+            
+            // 重新进行回译检查
+            try {
+                const backTranslation = await window.apiIntegration.translateGermanToChinese(processedText);
+                document.getElementById('back-translation').value = backTranslation;
+            } catch (backTranslationError) {
+                console.warn('回译更新失败:', backTranslationError);
+                // 回译失败不影响主要功能
+            }
+
+            this.showMessage('短横线已去除！', 'success');
+
+        } catch (error) {
+            this.showMessage(`去短横线失败：${error.message}`, 'error');
+            console.error('Remove Dash Error:', error);
         } finally {
             this.showLoading(false);
         }
@@ -746,10 +904,20 @@ ${deOutput}
             backTranslationNote.style.display = 'none';
         }
         
-        // 禁用"你您切换"按钮
+        // 禁用"你您切换"和"去短横线"按钮
         const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
         if (duSieSwitchBtn) {
             duSieSwitchBtn.disabled = true;
+        }
+        const removeDashBtn = document.getElementById('remove-dash-btn');
+        if (removeDashBtn) {
+            removeDashBtn.disabled = true;
+        }
+        
+        // 清除可能存在的编辑定时器
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
         }
         
         this.showMessage('已清空所有内容', 'success');

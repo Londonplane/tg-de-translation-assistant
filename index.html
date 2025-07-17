@@ -97,8 +97,8 @@
 
                     <div class="output-section">
                         <div class="output-group">
-                            <label>德语译文</label>
-                            <textarea id="de-output" readonly placeholder="德语翻译结果将显示在这里..."></textarea>
+                            <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                            <textarea id="de-output" placeholder="德语翻译结果将显示在这里..."></textarea>
                             <div id="pronoun-info" class="pronoun-info"></div>
                         </div>
 
@@ -126,6 +126,10 @@
                             <button class="btn btn-secondary" id="du-sie-switch-btn" disabled>
                                 <span class="btn-icon">🔄</span>
                                 你您切换
+                            </button>
+                            <button class="btn btn-secondary" id="remove-dash-btn" disabled>
+                                <span class="btn-icon">✂️</span>
+                                去短横线
                             </button>
                         </div>
                         
@@ -375,10 +379,79 @@
             </div>
         </div>
 
-        <!-- API配置按钮 -->
-        <button id="api-config-btn" class="floating-config-btn" title="API配置">
-            <span class="config-icon">⚙️</span>
-        </button>
+        <!-- 词汇表模态框 -->
+        <div id="vocabulary-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📚 词汇表管理</h3>
+                    <button class="close-btn" id="close-vocabulary-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="config-group">
+                        <label for="vocab-user-select">选择用户</label>
+                        <select id="vocab-user-select" class="user-select">
+                            <option value="">请选择用户...</option>
+                        </select>
+                        <small>💡 选择用户后查看和编辑其词汇表</small>
+                    </div>
+                    
+                    <div class="config-group" id="vocab-management" style="display: none;">
+                        <label>词汇表管理</label>
+                        <div class="vocab-actions">
+                            <button class="btn btn-primary btn-small" id="add-vocab-btn">+ 添加词汇</button>
+                            <button class="btn btn-outline btn-small" id="import-vocab-btn">📁 导入</button>
+                            <button class="btn btn-outline btn-small" id="export-vocab-btn">📤 导出</button>
+                            <button class="btn btn-secondary btn-small" id="clear-vocab-btn">🗑️清空</button>
+                        </div>
+                    </div>
+                    
+                    <div class="config-group" id="vocab-add-form" style="display: none;">
+                        <label>添加新词汇</label>
+                        <div class="vocab-form">
+                            <input type="text" id="vocab-chinese" placeholder="中文词汇（例如：绩优股）">
+                            <input type="text" id="vocab-german" placeholder="德语表达（例如：Top Aktien）">
+                            <div class="vocab-form-actions">
+                                <button class="btn btn-primary btn-small" id="save-vocab-btn">保存</button>
+                                <button class="btn btn-secondary btn-small" id="cancel-vocab-btn">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-group">
+                        <label>当前词汇表</label>
+                        <div class="vocab-list" id="vocab-list">
+                            <div class="vocab-empty">请选择用户查看词汇表</div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-group">
+                        <label>使用说明</label>
+                        <div class="vocab-help">
+                            <p>• 添加专业术语的固定翻译对照</p>
+                            <p>• 翻译时会自动使用您的词汇表</p>
+                            <p>• 每个用户可以维护独立的词汇表</p>
+                            <p>• 支持导入/导出功能便于备份</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="close-vocabulary">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 浮动按钮组 -->
+        <div class="floating-buttons">
+            <!-- 词汇表按钮 -->
+            <button id="vocabulary-btn" class="floating-config-btn" title="词汇表管理">
+                <span class="config-icon">📚</span>
+            </button>
+            
+            <!-- API配置按钮 -->
+            <button id="api-config-btn" class="floating-config-btn" title="API配置">
+                <span class="config-icon">⚙️</span>
+            </button>
+        </div>
     </div>
 
     <script src="config.js"></script>

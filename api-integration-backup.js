@@ -1,4 +1,4 @@
-// API Integration for German Translation Assistant
+﻿// API Integration for German Translation Assistant
 // OpenRouter API集成模块
 
 class APIIntegration {
@@ -93,57 +93,6 @@ class APIIntegration {
         document.getElementById('test-api')?.addEventListener('click', () => {
             this.testAPIConnection();
         });
-
-        // 词汇表按钮
-        document.getElementById('vocabulary-btn')?.addEventListener('click', () => {
-            this.showVocabularyModal();
-        });
-
-        // 词汇表模态框相关事件
-        document.getElementById('close-vocabulary-modal')?.addEventListener('click', () => {
-            this.hideVocabularyModal();
-        });
-        
-        document.getElementById('close-vocabulary')?.addEventListener('click', () => {
-            this.hideVocabularyModal();
-        });
-
-        // 点击模态框外部关闭
-        document.getElementById('vocabulary-modal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'vocabulary-modal') {
-                this.hideVocabularyModal();
-            }
-        });
-
-        // 词汇表用户选择
-        document.getElementById('vocab-user-select')?.addEventListener('change', (e) => {
-            this.selectVocabUser(e.target.value);
-        });
-
-        // 词汇表管理按钮
-        document.getElementById('add-vocab-btn')?.addEventListener('click', () => {
-            this.showAddVocabForm();
-        });
-
-        document.getElementById('save-vocab-btn')?.addEventListener('click', () => {
-            this.saveVocabulary();
-        });
-
-        document.getElementById('cancel-vocab-btn')?.addEventListener('click', () => {
-            this.hideAddVocabForm();
-        });
-
-        document.getElementById('import-vocab-btn')?.addEventListener('click', () => {
-            this.importVocabulary();
-        });
-
-        document.getElementById('export-vocab-btn')?.addEventListener('click', () => {
-            this.exportVocabulary();
-        });
-
-        document.getElementById('clear-vocab-btn')?.addEventListener('click', () => {
-            this.clearVocabulary();
-        });
     }
 
     // 显示API配置模态框
@@ -221,6 +170,12 @@ class APIIntegration {
         if (userId && this.users[userId]) {
             this.currentUser = userId;
             this.saveUsers();
+            
+            // 同步到词汇表管理器
+            if (window.vocabularyManager) {
+                window.vocabularyManager.currentUser = userId;
+                window.vocabularyManager.updateVocabularyList();
+            }
             
             // 如果用户配置界面是显示的，加载用户信息到表单并设置编辑状态
             if (document.getElementById('user-config').style.display === 'block') {
@@ -313,7 +268,6 @@ class APIIntegration {
                 name: userName,
                 apiKey: apiKey,
                 deeplApiKey: deeplApiKey || '',
-                vocabulary: this.users[userId].vocabulary || [], // 保留原有词汇表
                 updatedAt: new Date().toISOString()
             };
         } else {
@@ -332,7 +286,6 @@ class APIIntegration {
                 name: userName,
                 apiKey: apiKey,
                 deeplApiKey: deeplApiKey || '', // 允许为空字符串
-                vocabulary: [], // 初始化空词汇表
                 createdAt: new Date().toISOString()
             };
         }
@@ -635,8 +588,15 @@ class APIIntegration {
         }
 
         const model = window.getModelForRole(role);
-        const vocabulary = this.getCurrentUserVocabulary();
-        const prompt = window.buildCompletePrompt(role, text, vocabulary);
+        let prompt = window.buildCompletePrompt(role, text);
+        
+        // 注入词汇表
+        if (window.vocabularyManager) {
+            const vocabularyPrompt = window.vocabularyManager.buildVocabularyPrompt();
+            if (vocabularyPrompt) {
+                prompt += vocabularyPrompt;
+            }
+        }
 
         console.log('API Request:', {
             role,
@@ -884,377 +844,6 @@ class APIIntegration {
     // 检查API是否已配置（只需要OpenRouter API密钥）
     isConfigured() {
         return !!this.getCurrentApiKey();
-    }
-
-    // ==================== 词汇表管理功能 ====================
-
-    // 显示词汇表模态框
-    showVocabularyModal() {
-        document.getElementById('vocabulary-modal').classList.remove('hidden');
-        this.updateVocabUserSelect();
-        this.hideAddVocabForm();
-        this.selectVocabUser(this.currentUser);
-    }
-
-    // 隐藏词汇表模态框
-    hideVocabularyModal() {
-        document.getElementById('vocabulary-modal').classList.add('hidden');
-        this.hideAddVocabForm();
-    }
-
-    // 更新词汇表用户选择下拉框
-    updateVocabUserSelect() {
-        const userSelect = document.getElementById('vocab-user-select');
-        if (!userSelect) return;
-
-        // 清空现有选项
-        userSelect.innerHTML = '<option value="">请选择用户...</option>';
-
-        // 添加所有用户
-        Object.keys(this.users).forEach(userId => {
-            const option = document.createElement('option');
-            option.value = userId;
-            option.textContent = this.users[userId].name;
-            if (userId === this.currentUser) {
-                option.selected = true;
-            }
-            userSelect.appendChild(option);
-        });
-    }
-
-    // 选择词汇表用户
-    selectVocabUser(userId) {
-        if (userId && this.users[userId]) {
-            this.currentVocabUser = userId;
-            this.updateVocabList();
-            this.updateVocabManagement();
-        } else {
-            this.currentVocabUser = null;
-            this.updateVocabList();
-            this.updateVocabManagement();
-        }
-    }
-
-    // 更新词汇表列表显示
-    updateVocabList() {
-        const vocabList = document.getElementById('vocab-list');
-        if (!vocabList) return;
-
-        if (!this.currentVocabUser || !this.users[this.currentVocabUser]) {
-            vocabList.innerHTML = '<div class="vocab-empty">请选择用户查看词汇表</div>';
-            return;
-        }
-
-        const vocabulary = this.users[this.currentVocabUser].vocabulary || [];
-        
-        if (vocabulary.length === 0) {
-            vocabList.innerHTML = '<div class="vocab-empty">暂无词汇条目，点击"添加词汇"开始添加</div>';
-            return;
-        }
-
-        let html = '';
-        vocabulary.forEach((item, index) => {
-            html += `
-                <div class="vocab-item">
-                    <div class="vocab-pair">
-                        <div class="vocab-chinese">${this.escapeHtml(item.chinese)}</div>
-                        <div class="vocab-german">${this.escapeHtml(item.german)}</div>
-                    </div>
-                    <div class="vocab-actions-item">
-                        <button class="btn btn-outline btn-small" onclick="window.apiIntegration.editVocabItem(${index})">编辑</button>
-                        <button class="btn btn-secondary btn-small" onclick="window.apiIntegration.deleteVocabItem(${index})">删除</button>
-                    </div>
-                </div>
-            `;
-        });
-
-        vocabList.innerHTML = html;
-    }
-
-    // 更新词汇表管理界面
-    updateVocabManagement() {
-        const vocabManagement = document.getElementById('vocab-management');
-        if (!vocabManagement) return;
-
-        if (this.currentVocabUser) {
-            vocabManagement.style.display = 'block';
-            const vocabulary = this.users[this.currentVocabUser].vocabulary || [];
-            
-            // 更新统计信息
-            const userName = this.users[this.currentVocabUser].name;
-            const count = vocabulary.length;
-            vocabManagement.querySelector('label').textContent = `${userName}的词汇表管理 (${count}个词汇)`;
-        } else {
-            vocabManagement.style.display = 'none';
-        }
-    }
-
-    // 显示添加词汇表单
-    showAddVocabForm() {
-        if (!this.currentVocabUser) {
-            this.showMessage('请先选择用户', 'error');
-            return;
-        }
-        
-        document.getElementById('vocab-add-form').style.display = 'block';
-        document.getElementById('vocab-chinese').value = '';
-        document.getElementById('vocab-german').value = '';
-        document.getElementById('vocab-chinese').focus();
-    }
-
-    // 隐藏添加词汇表单
-    hideAddVocabForm() {
-        document.getElementById('vocab-add-form').style.display = 'none';
-        
-        // 重置编辑状态
-        this.editingVocabIndex = undefined;
-        document.getElementById('save-vocab-btn').textContent = '保存';
-    }
-
-    // 保存词汇
-    saveVocabulary() {
-        if (!this.currentVocabUser) {
-            this.showMessage('请先选择用户', 'error');
-            return;
-        }
-
-        const chinese = document.getElementById('vocab-chinese').value.trim();
-        const german = document.getElementById('vocab-german').value.trim();
-
-        if (!chinese || !german) {
-            this.showMessage('请输入中文词汇和德语表达', 'error');
-            return;
-        }
-
-        const vocabulary = this.users[this.currentVocabUser].vocabulary || [];
-        
-        // 检查是否为编辑模式
-        if (this.editingVocabIndex !== undefined) {
-            // 编辑模式：直接更新指定索引的词汇
-            vocabulary[this.editingVocabIndex] = { chinese, german };
-            this.editingVocabIndex = undefined;
-            
-            // 恢复保存按钮文本
-            document.getElementById('save-vocab-btn').textContent = '保存';
-        } else {
-            // 添加模式：检查是否已存在相同的中文词汇
-            const existingIndex = vocabulary.findIndex(item => item.chinese === chinese);
-            
-            if (existingIndex !== -1) {
-                if (confirm(`词汇 "${chinese}" 已存在，是否要覆盖现有的德语表达？`)) {
-                    vocabulary[existingIndex] = { chinese, german };
-                } else {
-                    return;
-                }
-            } else {
-                vocabulary.push({ chinese, german });
-            }
-        }
-
-        // 保存到用户数据
-        this.users[this.currentVocabUser].vocabulary = vocabulary;
-        this.saveUsers();
-
-        // 更新界面
-        this.updateVocabList();
-        this.updateVocabManagement();
-        this.hideAddVocabForm();
-
-        this.showMessage('词汇已添加', 'success');
-    }
-
-    // 编辑词汇条目
-    editVocabItem(index) {
-        if (!this.currentVocabUser) return;
-
-        const vocabulary = this.users[this.currentVocabUser].vocabulary || [];
-        if (index < 0 || index >= vocabulary.length) return;
-
-        const item = vocabulary[index];
-        
-        // 显示编辑表单
-        document.getElementById('vocab-add-form').style.display = 'block';
-        document.getElementById('vocab-chinese').value = item.chinese;
-        document.getElementById('vocab-german').value = item.german;
-        document.getElementById('vocab-chinese').focus();
-
-        // 设置编辑模式
-        this.editingVocabIndex = index;
-        
-        // 更新保存按钮文本
-        document.getElementById('save-vocab-btn').textContent = '更新';
-    }
-
-    // 删除词汇条目
-    deleteVocabItem(index) {
-        if (!this.currentVocabUser) return;
-
-        const vocabulary = this.users[this.currentVocabUser].vocabulary || [];
-        if (index < 0 || index >= vocabulary.length) return;
-
-        const item = vocabulary[index];
-        
-        if (confirm(`确定要删除词汇 "${item.chinese}" → "${item.german}" 吗？`)) {
-            vocabulary.splice(index, 1);
-            this.users[this.currentVocabUser].vocabulary = vocabulary;
-            this.saveUsers();
-            
-            this.updateVocabList();
-            this.updateVocabManagement();
-            this.showMessage('词汇已删除', 'success');
-        }
-    }
-
-    // 导入词汇表
-    importVocabulary() {
-        if (!this.currentVocabUser) {
-            this.showMessage('请先选择用户', 'error');
-            return;
-        }
-
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    if (!Array.isArray(data)) {
-                        throw new Error('文件格式不正确，应该是词汇数组');
-                    }
-
-                    // 验证数据格式
-                    const validItems = data.filter(item => 
-                        item && 
-                        typeof item.chinese === 'string' && 
-                        typeof item.german === 'string' &&
-                        item.chinese.trim() && 
-                        item.german.trim()
-                    );
-
-                    if (validItems.length === 0) {
-                        throw new Error('没有找到有效的词汇数据');
-                    }
-
-                    // 合并到现有词汇表
-                    const currentVocab = this.users[this.currentVocabUser].vocabulary || [];
-                    const mergedVocab = [...currentVocab];
-                    
-                    let addedCount = 0;
-                    let skippedCount = 0;
-                    
-                    validItems.forEach(item => {
-                        const existingIndex = mergedVocab.findIndex(existing => existing.chinese === item.chinese);
-                        if (existingIndex === -1) {
-                            mergedVocab.push({
-                                chinese: item.chinese.trim(),
-                                german: item.german.trim()
-                            });
-                            addedCount++;
-                        } else {
-                            skippedCount++;
-                        }
-                    });
-
-                    this.users[this.currentVocabUser].vocabulary = mergedVocab;
-                    this.saveUsers();
-                    
-                    this.updateVocabList();
-                    this.updateVocabManagement();
-                    
-                    this.showMessage(`导入完成！添加了 ${addedCount} 个词汇，跳过了 ${skippedCount} 个重复词汇`, 'success');
-                    
-                } catch (error) {
-                    console.error('Import error:', error);
-                    this.showMessage(`导入失败：${error.message}`, 'error');
-                }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    }
-
-    // 导出词汇表
-    exportVocabulary() {
-        if (!this.currentVocabUser) {
-            this.showMessage('请先选择用户', 'error');
-            return;
-        }
-
-        const vocabulary = this.users[this.currentVocabUser].vocabulary || [];
-        if (vocabulary.length === 0) {
-            this.showMessage('词汇表为空，无法导出', 'error');
-            return;
-        }
-
-        const userName = this.users[this.currentVocabUser].name;
-        const exportData = vocabulary.map(item => ({
-            chinese: item.chinese,
-            german: item.german
-        }));
-
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${userName}_词汇表_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        URL.revokeObjectURL(url);
-        this.showMessage('词汇表已导出', 'success');
-    }
-
-    // 清空词汇表
-    clearVocabulary() {
-        if (!this.currentVocabUser) {
-            this.showMessage('请先选择用户', 'error');
-            return;
-        }
-
-        const userName = this.users[this.currentVocabUser].name;
-        const vocabulary = this.users[this.currentVocabUser].vocabulary || [];
-        
-        if (vocabulary.length === 0) {
-            this.showMessage('词汇表已经是空的', 'info');
-            return;
-        }
-
-        if (confirm(`确定要清空 "${userName}" 的所有词汇吗？此操作不可恢复。`)) {
-            this.users[this.currentVocabUser].vocabulary = [];
-            this.saveUsers();
-            
-            this.updateVocabList();
-            this.updateVocabManagement();
-            this.showMessage('词汇表已清空', 'success');
-        }
-    }
-
-    // 获取当前用户的词汇表
-    getCurrentUserVocabulary() {
-        if (this.currentUser && this.users[this.currentUser]) {
-            return this.users[this.currentUser].vocabulary || [];
-        }
-        return [];
-    }
-
-    // HTML转义工具函数
-    escapeHtml(text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        };
-        return text.replace(/[&<>"']/g, m => map[m]);
     }
 }
 

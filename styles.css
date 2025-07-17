@@ -908,11 +908,18 @@ textarea::-webkit-scrollbar-thumb:hover {
     font-size: 0.7rem;
 }
 
-/* 浮动配置按钮样式 */
-.floating-config-btn {
+/* 浮动按钮组样式 */
+.floating-buttons {
     position: fixed;
     bottom: 20px;
     right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 999;
+}
+
+.floating-config-btn {
     width: 56px;
     height: 56px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -922,7 +929,6 @@ textarea::-webkit-scrollbar-thumb:hover {
     cursor: pointer;
     box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
     transition: all 0.3s ease;
-    z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -935,6 +941,185 @@ textarea::-webkit-scrollbar-thumb:hover {
 
 .config-icon {
     font-size: 1.25rem;
+}
+
+/* 词汇表按钮特殊样式 */
+#vocabulary-btn {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.4);
+}
+
+#vocabulary-btn:hover {
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
+}
+
+/* 词汇表相关样式 */
+.vocab-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.vocab-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.vocab-form input {
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.vocab-form input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.vocab-form-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.vocab-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+}
+
+.vocab-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.vocab-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s ease;
+}
+
+.vocab-item:last-child {
+    border-bottom: none;
+}
+
+.vocab-item:hover {
+    background: #f3f4f6;
+}
+
+.vocab-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.vocab-chinese {
+    font-weight: 500;
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.vocab-german {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.vocab-actions-item {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.vocab-help {
+    background: #f0f9ff;
+    border: 2px solid #bae6fd;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #0c4a6e;
+}
+
+.vocab-help p {
+    margin: 0.25rem 0;
+}
+
+.vocab-help p:first-child {
+    margin-top: 0;
+}
+
+.vocab-help p:last-child {
+    margin-bottom: 0;
+}
+
+/* 词汇表统计 */
+.vocab-stats {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+/* 词汇表编辑模式 */
+.vocab-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.vocab-edit-form input {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.vocab-edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* 词汇表搜索 */
+.vocab-search {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.vocab-search input {
+    width: 100%;
+    padding: 0.75rem;
+    padding-left: 2.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.vocab-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 1rem;
 }
 
 /* 响应式调整 */
@@ -951,9 +1136,13 @@ textarea::-webkit-scrollbar-thumb:hover {
         padding-right: 1rem;
     }
     
-    .floating-config-btn {
+    .floating-buttons {
         bottom: 15px;
         right: 15px;
+        gap: 8px;
+    }
+    
+    .floating-config-btn {
         width: 48px;
         height: 48px;
     }
