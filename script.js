@@ -3,6 +3,7 @@ class TranslationApp {
     constructor() {
         this.currentModule = 'cn-to-de';
         this.debounceTimer = null; // 德语译文编辑防抖定时器
+        this.currentImageData = null; // 当前上传的图片数据
         this.init();
     }
 
@@ -57,6 +58,9 @@ class TranslationApp {
         
         // 德语助手模块
         this.setupAssistantEvents();
+        
+        // OCR识别模块
+        this.setupOCREvents();
     }
 
     // 中译德模块事件
@@ -135,6 +139,73 @@ class TranslationApp {
         askBtn?.addEventListener('click', () => this.handleAssistantQuery());
         copyBtn?.addEventListener('click', () => this.copyAssistantAnswer());
         clearBtn?.addEventListener('click', () => this.clearAssistantFields());
+    }
+
+    // OCR识别模块事件
+    setupOCREvents() {
+        const uploadArea = document.getElementById('image-upload-area');
+        const fileInput = document.getElementById('image-file-input');
+        const recognizeBtn = document.getElementById('ocr-recognize');
+        const retryBtn = document.getElementById('ocr-retry');
+        const copyBtn = document.getElementById('ocr-copy');
+        const clearBtn = document.getElementById('ocr-clear');
+        const removeImageBtn = document.getElementById('remove-image-btn');
+
+        // 点击上传区域触发文件选择
+        uploadArea?.addEventListener('click', () => {
+            fileInput?.click();
+        });
+
+        // 文件选择处理
+        fileInput?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.handleImageFile(file);
+            }
+        });
+
+        // 拖拽上传
+        uploadArea?.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea?.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea?.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                this.handleImageFile(files[0]);
+            }
+        });
+
+        // 剪贴板粘贴
+        document.addEventListener('paste', (e) => {
+            if (this.currentModule === 'ocr-recognition') {
+                const items = e.clipboardData.items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            this.handleImageFile(file);
+                        }
+                        break;
+                    }
+                }
+            }
+        });
+
+        // 按钮事件
+        recognizeBtn?.addEventListener('click', () => this.handleOCRRecognition());
+        retryBtn?.addEventListener('click', () => this.handleOCRRecognition());
+        copyBtn?.addEventListener('click', () => this.copyToClipboard('ocr-output'));
+        clearBtn?.addEventListener('click', () => this.clearOCRFields());
+        removeImageBtn?.addEventListener('click', () => this.removeImage());
     }
 
     // 德语文本编辑处理（自动回译）
@@ -940,6 +1011,158 @@ ${deOutput}
         this.showMessage('已清空所有内容', 'success');
     }
 
+    // OCR相关方法
+
+    // 处理图片文件
+    handleImageFile(file) {
+        // 验证文件类型
+        if (!file.type.startsWith('image/')) {
+            this.showMessage('请选择有效的图片文件', 'error');
+            return;
+        }
+
+        // 验证文件大小 (最大10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            this.showMessage('图片文件不能超过10MB', 'error');
+            return;
+        }
+
+        // 读取并显示图片
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.displayImagePreview(e.target.result);
+            this.currentImageData = e.target.result;
+            
+            // 启用识别按钮
+            const recognizeBtn = document.getElementById('ocr-recognize');
+            const retryBtn = document.getElementById('ocr-retry');
+            if (recognizeBtn) recognizeBtn.disabled = false;
+            if (retryBtn) retryBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 显示图片预览
+    displayImagePreview(imageSrc) {
+        const uploadArea = document.getElementById('image-upload-area');
+        const previewArea = document.getElementById('image-preview');
+        const previewImage = document.getElementById('preview-image');
+
+        if (uploadArea && previewArea && previewImage) {
+            uploadArea.style.display = 'none';
+            previewImage.src = imageSrc;
+            previewArea.style.display = 'block';
+        }
+    }
+
+    // 移除图片
+    removeImage() {
+        const uploadArea = document.getElementById('image-upload-area');
+        const previewArea = document.getElementById('image-preview');
+        const fileInput = document.getElementById('image-file-input');
+        const recognizeBtn = document.getElementById('ocr-recognize');
+        const retryBtn = document.getElementById('ocr-retry');
+
+        if (uploadArea && previewArea) {
+            uploadArea.style.display = 'flex';
+            previewArea.style.display = 'none';
+        }
+
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        // 禁用识别按钮
+        if (recognizeBtn) recognizeBtn.disabled = true;
+        if (retryBtn) retryBtn.disabled = true;
+
+        this.currentImageData = null;
+        this.showMessage('已移除图片', 'success');
+    }
+
+    // 处理OCR识别
+    async handleOCRRecognition() {
+        if (!this.currentImageData) {
+            this.showMessage('请先上传图片', 'error');
+            return;
+        }
+
+        // 检查API是否已配置
+        if (!window.apiIntegration || !window.apiIntegration.isConfigured()) {
+            this.showMessage('请先配置API密钥', 'error');
+            setTimeout(() => {
+                window.apiIntegration?.showAPIConfig();
+            }, 1000);
+            return;
+        }
+
+        this.showLoading(true);
+
+        try {
+            const apiKey = window.apiIntegration.getCurrentApiKey();
+            
+            // 调用OpenRouter的Qwen2.5 VL 72B Instruct API
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'Chinese-German-Translation-Assistant-OCR'
+                },
+                body: JSON.stringify({
+                    model: 'qwen/qwen2.5-vl-72b-instruct',
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'text',
+                                text: '请识别图片中的所有文字内容。图片中主要包含德语和中文文字。请按照以下要求输出：\n1. 准确识别所有可见的文字\n2. 保持原有的文字排列和格式\n3. 如果有多行文字，请保持换行格式\n4. 在开头用中文对图片内容进行描述，然后只输出识别到的文字内容，不要添加任何解释或说明\n5. 如果某些文字不清楚，请用[不清楚]标注'
+                            },
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: this.currentImageData
+                                }
+                            }
+                        ]
+                    }],
+                    temperature: 0.1,
+                    max_tokens: 2000
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`API请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error('API返回数据格式错误');
+            }
+
+            const recognizedText = data.choices[0].message.content.trim();
+            document.getElementById('ocr-output').value = recognizedText;
+            
+            this.showMessage('文字识别完成！', 'success');
+
+        } catch (error) {
+            this.showMessage(`识别失败：${error.message}`, 'error');
+            console.error('OCR识别错误:', error);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    // 清空OCR字段
+    clearOCRFields() {
+        document.getElementById('ocr-output').value = '';
+        this.removeImage();
+        this.showMessage('已清空所有内容', 'success');
+    }
+
     // 复制助手回答
     async copyAssistantAnswer() {
         const resultDiv = document.getElementById('assistant-result');
@@ -1185,6 +1408,9 @@ document.addEventListener('keydown', (e) => {
                 break;
             case 'de-to-cn':
                 document.getElementById('de-to-cn-translate')?.click();
+                break;
+            case 'ocr-recognition':
+                document.getElementById('ocr-recognize')?.click();
                 break;
             case 'grammar-check':
                 document.getElementById('check-grammar')?.click();

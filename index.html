@@ -23,6 +23,10 @@
                     <span class="nav-icon">🇩🇪➡️🇨🇳</span>
                     <span class="nav-text">德译中</span>
                 </button>
+                <button class="nav-btn" data-module="ocr-recognition">
+                    <span class="nav-icon">📷</span>
+                    <span class="nav-text">图片识别</span>
+                </button>
                 <button class="nav-btn" data-module="du-sie">
                     <span class="nav-icon">👤↔️</span>
                     <span class="nav-text">你/您切换</span>
@@ -182,7 +186,62 @@
                 </div>
             </div>
 
-            <!-- 模块3: Du/Sie切换 -->
+            <!-- 模块3: OCR识别 -->
+            <div id="ocr-recognition" class="module">
+                <div class="module-header">
+                    <h2>OCR图片文字识别</h2>
+                    <p class="module-desc">上传图片或粘贴图片，自动识别其中的德语和中文内容</p>
+                </div>
+                
+                <div class="content-simple">
+                    <div class="input-section">
+                        <label>图片输入</label>
+                        <div class="image-upload-area" id="image-upload-area">
+                            <div class="upload-placeholder">
+                                <div class="upload-icon">📷</div>
+                                <div class="upload-text">
+                                    <p><strong>点击上传图片</strong> 或 <strong>拖拽图片到此处</strong></p>
+                                    <p>也可以使用 <kbd>Ctrl+V</kbd> 粘贴剪贴板中的图片</p>
+                                    <small>支持 JPG、PNG、GIF、WebP 格式</small>
+                                </div>
+                            </div>
+                            <input type="file" id="image-file-input" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="image-preview" id="image-preview" style="display: none;">
+                            <img id="preview-image" alt="预览图片">
+                            <button class="remove-image-btn" id="remove-image-btn" title="移除图片">×</button>
+                        </div>
+                    </div>
+
+                    <div class="output-section">
+                        <label>识别结果 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                        <textarea id="ocr-output" placeholder="图片中的文字内容将显示在这里..."></textarea>
+                    </div>
+
+                    <div class="action-section">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="ocr-recognize" disabled>
+                                <span class="btn-icon">🔍</span>
+                                识别文字
+                            </button>
+                            <button class="btn btn-secondary" id="ocr-retry" disabled>
+                                <span class="btn-icon">🔄</span>
+                                重新识别
+                            </button>
+                            <button class="btn btn-outline" id="ocr-copy">
+                                <span class="btn-icon">📋</span>
+                                复制文字
+                            </button>
+                            <button class="btn btn-secondary" id="ocr-clear">
+                                <span class="btn-icon">🗑️</span>
+                                清空
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模块4: Du/Sie切换 -->
             <div id="du-sie" class="module">
                 <div class="module-header">
                     <h2>你/您切换 (Du/Sie)</h2>
@@ -215,7 +274,7 @@
                 </div>
             </div>
 
-            <!-- 模块4: 德语检查 -->
+            <!-- 模块5: 德语检查 -->
             <div id="grammar-check" class="module">
                 <div class="module-header">
                     <h2>德语文本检查</h2>
@@ -251,7 +310,7 @@
                 </div>
             </div>
 
-            <!-- 模块5: 德语助手 -->
+            <!-- 模块6: 德语助手 -->
             <div id="assistant" class="module">
                 <div class="module-header">
                     <h2>德语小助手</h2>
