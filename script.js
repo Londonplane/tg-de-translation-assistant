@@ -71,6 +71,7 @@ class TranslationApp {
         const removeCommentsBtn = document.getElementById('remove-comments-btn');
         const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
         const removeDashBtn = document.getElementById('remove-dash-btn');
+        const removeEmojiBtn = document.getElementById('remove-emoji-btn');
         const clearBtn = document.getElementById('clear-btn');
         const copyOriginal = document.getElementById('copy-original');
         const copyTranslation = document.getElementById('copy-translation');
@@ -82,6 +83,7 @@ class TranslationApp {
         removeCommentsBtn?.addEventListener('click', () => this.handleRemoveComments());
         duSieSwitchBtn?.addEventListener('click', () => this.handleDuSieSwitch());
         removeDashBtn?.addEventListener('click', () => this.handleRemoveDash());
+        removeEmojiBtn?.addEventListener('click', () => this.handleRemoveEmoji());
         clearBtn?.addEventListener('click', () => this.clearCnToDeFields());
         
         copyOriginal?.addEventListener('click', () => this.copyToClipboard('cn-input'));
@@ -288,7 +290,7 @@ class TranslationApp {
                 backTranslationNote.style.display = 'block';
             }
             
-            // 启用"你您切换"和"去短横线"按钮
+            // 启用"你您切换"、"去短横线"和"去除表情"按钮
             const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
             if (duSieSwitchBtn) {
                 duSieSwitchBtn.disabled = false;
@@ -296,6 +298,10 @@ class TranslationApp {
             const removeDashBtn = document.getElementById('remove-dash-btn');
             if (removeDashBtn) {
                 removeDashBtn.disabled = false;
+            }
+            const removeEmojiBtn = document.getElementById('remove-emoji-btn');
+            if (removeEmojiBtn) {
+                removeEmojiBtn.disabled = false;
             }
             
             this.showMessage(`翻译完成！使用模型：${result.model}`, 'success');
@@ -662,6 +668,96 @@ ${deOutput}
         } catch (error) {
             this.showMessage(`去短横线失败：${error.message}`, 'error');
             console.error('Remove Dash Error:', error);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    // 去除表情处理
+    async handleRemoveEmoji() {
+        const deOutput = document.getElementById('de-output').value.trim();
+        if (!deOutput) {
+            this.showMessage('没有德语译文可以处理', 'error');
+            return;
+        }
+        // 检查API是否已配置
+        if (!window.apiIntegration || !window.apiIntegration.isConfigured()) {
+            this.showMessage('请先配置API密钥', 'error');
+            setTimeout(() => {
+                window.apiIntegration?.showAPIConfig();
+            }, 1000);
+            return;
+        }
+        this.showLoading(true);
+        try {
+            // 使用OpenRouter API去除表情符号
+            const apiKey = window.apiIntegration.getCurrentApiKey();
+            
+            const prompt = `请去掉以下德语文本中的所有emoji表情符号和表情图标，保持其他内容完全不变。只需要去除emoji符号，不要改变任何德语单词、标点符号或格式。
+德语文本：
+${deOutput}
+请只返回去除表情符号后的德语文本，不要添加任何解释。`;
+            
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'Chinese-German-Translation-Assistant-Remove-Emoji'
+                },
+                body: JSON.stringify({
+                    model: 'google/gemini-2.5-flash',
+                    messages: [{
+                        role: 'user',
+                        content: prompt
+                    }],
+                    temperature: 0.3,
+                    max_tokens: 1000
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`API请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+            }
+            
+            const data = await response.json();
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error('API返回数据格式错误');
+            }
+            
+            const processedText = data.choices[0].message.content.trim();
+            
+            // 更新德语译文
+            document.getElementById('de-output').value = processedText;
+            
+            // 保持人称信息显示
+            const pronounInfo = document.getElementById('pronoun-info');
+            if (pronounInfo.style.display !== 'none') {
+                const currentPronounType = window.apiIntegration.detectPronounUsage(processedText);
+                pronounInfo.textContent = `德语译文使用的是：${currentPronounType}`;
+            }
+            
+            // 确保回译备注显示
+            const backTranslationNote = document.getElementById('back-translation-note');
+            if (backTranslationNote) {
+                backTranslationNote.style.display = 'block';
+            }
+            
+            // 重新进行回译检查
+            try {
+                const backTranslation = await window.apiIntegration.translateGermanToChinese(processedText);
+                document.getElementById('back-translation').value = backTranslation;
+            } catch (backTranslationError) {
+                console.warn('回译更新失败:', backTranslationError);
+                // 回译失败不影响主要功能
+            }
+            
+            this.showMessage('表情符号已去除！', 'success');
+        } catch (error) {
+            this.showMessage(`去除表情失败：${error.message}`, 'error');
+            console.error('Remove Emoji Error:', error);
         } finally {
             this.showLoading(false);
         }
@@ -1176,7 +1272,7 @@ ${cnText}`;
             backTranslationNote.style.display = 'none';
         }
         
-        // 禁用"你您切换"和"去短横线"按钮
+        // 禁用"你您切换"、"去短横线"和"去除表情"按钮
         const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
         if (duSieSwitchBtn) {
             duSieSwitchBtn.disabled = true;
@@ -1184,6 +1280,10 @@ ${cnText}`;
         const removeDashBtn = document.getElementById('remove-dash-btn');
         if (removeDashBtn) {
             removeDashBtn.disabled = true;
+        }
+        const removeEmojiBtn = document.getElementById('remove-emoji-btn');
+        if (removeEmojiBtn) {
+            removeEmojiBtn.disabled = true;
         }
         
         // 清除可能存在的编辑定时器

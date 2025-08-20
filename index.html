@@ -63,37 +63,29 @@
                         <div class="setting-group">
                             <label>选择翻译角色</label>
                             <div class="radio-group">
-                                <label class="radio-option" title="正式、专业的德语，适合学术化、清晰、无情绪色彩的金融解释">
-                                    <input type="radio" name="role" value="professor" checked>
-                                    <span>🎓 教授</span>
+                                <label class="radio-option" title="权威但友善的群聊风格，适合男性教授在投资群中分享见解">
+                                    <input type="radio" name="role" value="male-professor" checked>
+                                    <span>👨‍🎓 男教授</span>
                                 </label>
-                                <label class="radio-option" title="亲切自然的德语，语气年轻女性化，适合日常口语交流">
-                                    <input type="radio" name="role" value="assistant-25">
-                                    <span>👩‍🎓 25岁女助理</span>
+                                <label class="radio-option" title="权威但温和的群聊风格，适合女性教授在投资群中提供指导">
+                                    <input type="radio" name="role" value="female-professor">
+                                    <span>👩‍🎓 女教授</span>
                                 </label>
-                                <label class="radio-option" title="成熟稳重的德语，语气平和可信，适合引导性讨论">
-                                    <input type="radio" name="role" value="assistant-35">
-                                    <span>👩‍💼 35岁女助理</span>
+                                <label class="radio-option" title="热情主动的群聊风格，适合男性助理为群友提供帮助">
+                                    <input type="radio" name="role" value="male-assistant">
+                                    <span>👨‍💼 男助理</span>
                                 </label>
-                                <label class="radio-option" title="简洁正式的德语公告风格，适合发布重要信息">
-                                    <input type="radio" name="role" value="announcement-assistant">
-                                    <span>📢 公告女助理</span>
+                                <label class="radio-option" title="贴心细致的群聊风格，适合女性助理温馨提醒和帮助">
+                                    <input type="radio" name="role" value="female-assistant">
+                                    <span>👩‍💼 女助理</span>
                                 </label>
-                                <label class="radio-option" title="自然流畅的德语口语，语气正常平和，适合日常交流">
-                                    <input type="radio" name="role" value="troll-1">
-                                    <span>🗣️ 水军1号(普通型)</span>
+                                <label class="radio-option" title="活跃幽默的群聊风格，能带动气氛引发互动">
+                                    <input type="radio" name="role" value="male-troll">
+                                    <span>🙋‍♂️ 男水军</span>
                                 </label>
-                                <label class="radio-option" title="基础口语化的德语，语气夸张热情，适合吸引注意力">
-                                    <input type="radio" name="role" value="troll-2">
-                                    <span>🗣️ 水军2号(情绪型)</span>
-                                </label>
-                                <label class="radio-option" title="互动性强的德语，多用疑问句，适合引发讨论">
-                                    <input type="radio" name="role" value="troll-3">
-                                    <span>🗣️ 水军3号(引导型)</span>
-                                </label>
-                                <label class="radio-option" title="煽动性、夸张且情绪化的德语，适合制造争议">
-                                    <input type="radio" name="role" value="troll-4">
-                                    <span>🗣️ 水军4号(煽动型)</span>
+                                <label class="radio-option" title="活跃生动的群聊风格，善于活跃氛围制造话题">
+                                    <input type="radio" name="role" value="female-troll">
+                                    <span>🙋‍♀️ 女水军</span>
                                 </label>
                             </div>
                         </div>
@@ -138,6 +130,10 @@
                             <button class="btn btn-secondary" id="remove-dash-btn" disabled>
                                 <span class="btn-icon">✂️</span>
                                 去短横线
+                            </button>
+                            <button class="btn btn-secondary" id="remove-emoji-btn" disabled>
+                                <span class="btn-icon">😶</span>
+                                去除表情
                             </button>
                         </div>
                         
