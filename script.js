@@ -1102,88 +1102,7 @@ ${cnText}`;
         }
     }
 
-    // 模拟翻译API（将来替换为真实API）
-    async simulateTranslation(text, direction, options = {}) {
-        // 模拟API延迟
-        await this.sleep(1500);
-        
-        if (direction === 'cn-to-de') {
-            const pronounTypes = ['Sie (您)', 'Du (你)', '无人称'];
-            const randomPronoun = pronounTypes[Math.floor(Math.random() * pronounTypes.length)];
-            
-            return {
-                translation: `[模拟德语翻译] ${text} (角色: ${options.role}, 场景: ${options.scene})`,
-                backTranslation: `[回译检查] ${text}`,
-                pronounType: randomPronoun
-            };
-        } else {
-            return {
-                translation: `[模拟中文翻译] ${text}`
-            };
-        }
-    }
 
-    // 模拟Du/Sie转换
-    async simulateConversion(text, targetType) {
-        await this.sleep(1000);
-        return {
-            convertedText: `[转换为${targetType === 'du' ? 'Du' : 'Sie'}] ${text}`
-        };
-    }
-
-    // 模拟语法检查
-    async simulateGrammarCheck(text) {
-        await this.sleep(1200);
-        return {
-            errors: [
-                {
-                    type: '语法错误',
-                    description: '示例语法问题',
-                    suggestion: '修改建议'
-                }
-            ],
-            correctedText: `[检查后的文本] ${text}`,
-            hasErrors: Math.random() > 0.5
-        };
-    }
-
-    // 模拟助手查询
-    async simulateAssistantQuery(query) {
-        await this.sleep(1000);
-        return {
-            answer: `关于 "${query}" 的回答：\n\n这是一个模拟回答。在实际应用中，这里会显示AI助手基于德语语境提供的详细解答，包括语法解释、词汇分析、文化背景等信息。`,
-            relatedTopics: ['相关话题1', '相关话题2']
-        };
-    }
-
-    // 格式化语法检查结果
-    formatGrammarResult(result) {
-        let html = '';
-        
-        if (result.hasErrors) {
-            html += '<div class="error-section"><h4>发现的问题：</h4>';
-            result.errors.forEach(error => {
-                html += `
-                    <div class="error-item">
-                        <strong>${error.type}:</strong> ${error.description}
-                        <br><em>建议：${error.suggestion}</em>
-                    </div>
-                `;
-            });
-            html += '</div>';
-        } else {
-            html += '<div class="success-message">未发现明显的语法错误！</div>';
-        }
-        
-        html += `
-            <div class="corrected-section">
-                <h4>建议文本：</h4>
-                <div class="corrected-text">${result.correctedText}</div>
-            </div>
-        `;
-        
-        return html;
-    }
 
     // 格式化API德语检查结果
     formatGrammarApiResult(result) {
@@ -1223,27 +1142,6 @@ ${cnText}`;
         return `<div class="grammar-api-result"><p>${formattedResult}</p></div>`;
     }
 
-    // 格式化助手回答
-    formatAssistantResult(result) {
-        let html = `
-            <div class="answer-section">
-                <div class="answer-text">${result.answer}</div>
-            </div>
-        `;
-        
-        if (result.relatedTopics.length > 0) {
-            html += `
-                <div class="related-topics">
-                    <h4>相关话题：</h4>
-                    <ul>
-                        ${result.relatedTopics.map(topic => `<li>${topic}</li>`).join('')}
-                    </ul>
-                </div>
-            `;
-        }
-        
-        return html;
-    }
 
     // 格式化API德语助手回答
     formatAssistantApiResult(answer) {
