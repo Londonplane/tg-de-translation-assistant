@@ -7,9 +7,6 @@ class APIIntegration {
         this.currentUser = null;  // 当前选中的用户
         this.currentEditingUser = null;  // 当前正在编辑的用户
         this.baseURL = 'https://openrouter.ai/api/v1/chat/completions';
-        // 使用配置文件中的Supabase URL
-        this.supabaseUrl = window.CONFIG?.supabaseUrl || 'https://lztrfhjkivzckqisgrcc.supabase.co';
-        this.deeplProxyURL = `${this.supabaseUrl}/functions/v1/deepl-proxy`;
         this.init();
     }
 
@@ -64,19 +61,9 @@ class APIIntegration {
             this.copyToClipboard('api-key', 'copy-openrouter-key');
         });
 
-        // 复制DeepL API密钥
-        document.getElementById('copy-deepl-key')?.addEventListener('click', () => {
-            this.copyToClipboard('deepl-api-key', 'copy-deepl-key');
-        });
-
         // 显示/隐藏OpenRouter API密钥
         document.getElementById('toggle-openrouter-key')?.addEventListener('click', () => {
             this.togglePasswordVisibility('api-key', 'toggle-openrouter-key');
-        });
-
-        // 显示/隐藏DeepL API密钥
-        document.getElementById('toggle-deepl-key')?.addEventListener('click', () => {
-            this.togglePasswordVisibility('deepl-api-key', 'toggle-deepl-key');
         });
 
         // 导出用户配置
@@ -241,7 +228,6 @@ class APIIntegration {
         const user = this.users[userId];
         document.getElementById('user-name').value = user.name || '';
         document.getElementById('api-key').value = user.apiKey || '';
-        document.getElementById('deepl-api-key').value = user.deeplApiKey || '';
     }
 
     // 显示添加用户界面
@@ -250,7 +236,6 @@ class APIIntegration {
         document.getElementById('user-config').style.display = 'block';
         document.getElementById('user-name').value = '';
         document.getElementById('api-key').value = '';
-        document.getElementById('deepl-api-key').value = '';
         document.getElementById('user-name').focus();
         this.updateConfigFormMode();
     }
@@ -285,7 +270,6 @@ class APIIntegration {
     saveAPIConfig() {
         const userName = document.getElementById('user-name').value.trim();
         const apiKey = document.getElementById('api-key').value.trim();
-        const deeplApiKey = document.getElementById('deepl-api-key').value.trim();
         
         if (!userName) {
             this.showMessage('请输入用户名称', 'error');
@@ -296,8 +280,6 @@ class APIIntegration {
             this.showMessage('请输入OpenRouter API密钥', 'error');
             return;
         }
-        
-        // DeepL API密钥是可选的，不需要验证
 
         let userId;
         let isEditing = false;
@@ -312,7 +294,6 @@ class APIIntegration {
                 ...this.users[userId], // 保留原有信息
                 name: userName,
                 apiKey: apiKey,
-                deeplApiKey: deeplApiKey || '',
                 vocabulary: this.users[userId].vocabulary || [], // 保留原有词汇表
                 updatedAt: new Date().toISOString()
             };
@@ -331,7 +312,6 @@ class APIIntegration {
             this.users[userId] = {
                 name: userName,
                 apiKey: apiKey,
-                deeplApiKey: deeplApiKey || '', // 允许为空字符串
                 vocabulary: [], // 初始化空词汇表
                 createdAt: new Date().toISOString()
             };
@@ -439,10 +419,8 @@ class APIIntegration {
     // 更新API状态显示
     updateModelStatus() {
         const openrouterStatus = document.getElementById('openrouter-status');
-        const deeplStatus = document.getElementById('deepl-status');
         
         const hasOpenrouterKey = this.getCurrentApiKey();
-        const hasDeeplKey = this.getCurrentDeepLApiKey();
         
         // OpenRouter状态
         if (hasOpenrouterKey) {
@@ -451,15 +429,6 @@ class APIIntegration {
         } else {
             openrouterStatus.textContent = '⚪ 未配置';
             openrouterStatus.style.color = '#6b7280';
-        }
-        
-        // DeepL状态
-        if (hasDeeplKey) {
-            deeplStatus.textContent = '🟢 已配置';
-            deeplStatus.style.color = '#10b981';
-        } else {
-            deeplStatus.textContent = '⚪ 未配置';
-            deeplStatus.style.color = '#6b7280';
         }
     }
 
@@ -536,7 +505,6 @@ class APIIntegration {
     // 测试API连接
     async testAPIConnection() {
         const openrouterKey = this.getCurrentApiKey();
-        const deeplKey = this.getCurrentDeepLApiKey();
         
         if (!openrouterKey) {
             this.showMessage('请先选择用户并配置OpenRouter API密钥', 'error');
@@ -561,20 +529,16 @@ class APIIntegration {
                 results.push(`❌ OpenRouter API连接失败: ${error.message}`);
             }
             
-            // 测试DeepL API（仅在配置了密钥时测试）
-            if (deeplKey) {
-                try {
-                    const deeplTest = await this.translateGermanToChinese('Hallo');
-                    if (deeplTest && !deeplTest.includes('暂时不可用')) {
-                        results.push('✅ DeepL API连接成功');
-                    } else {
-                        results.push('❌ DeepL API连接失败');
-                    }
-                } catch (error) {
-                    results.push(`❌ DeepL API连接失败: ${error.message}`);
+            // 测试AI回译功能
+            try {
+                const backTranslationTest = await this.translateGermanToChinese('Hallo Welt');
+                if (backTranslationTest && !backTranslationTest.includes('暂时不可用')) {
+                    results.push('✅ AI回译功能连接成功');
+                } else {
+                    results.push('❌ AI回译功能连接失败');
                 }
-            } else {
-                results.push('ℹ️ DeepL API未配置，将使用AI回译');
+            } catch (error) {
+                results.push(`❌ AI回译功能连接失败: ${error.message}`);
             }
 
             const allSuccess = results.every(r => r.includes('✅'));
@@ -597,29 +561,6 @@ class APIIntegration {
             return this.users[this.currentUser].apiKey;
         }
         return null;
-    }
-
-    // 获取当前用户的DeepL API密钥
-    getCurrentDeepLApiKey() {
-        if (this.currentUser && this.users[this.currentUser]) {
-            return this.users[this.currentUser].deeplApiKey;
-        }
-        return null;
-    }
-
-    // 获取代理服务URL
-    getProxyURL() {
-        return this.deeplProxyURL;
-    }
-
-    // 检查代理服务是否可用
-    async isProxyServiceAvailable() {
-        try {
-            // Supabase Edge Functions通常是高可用的，简化检查
-            return true;
-        } catch (error) {
-            return false;
-        }
     }
 
     // 调用OpenRouter API
@@ -781,56 +722,17 @@ class APIIntegration {
         }
     }
 
-    // 德中翻译（回译功能）- 通过代理服务调用DeepL API，失败时使用AI回译
+    // 德中翻译（回译功能）- 直接使用AI回译
     async translateGermanToChinese(germanText) {
-        const deeplApiKey = this.getCurrentDeepLApiKey();
-        if (!deeplApiKey) {
-            console.log('DeepL API密钥未配置，使用AI回译作为后备方案');
-            return this.aiBackTranslation(germanText);
-        }
-
-        console.log('DeepL Back Translation Request (via Supabase):', {
+        console.log('AI Back Translation Request:', {
             text: germanText.substring(0, 100) + '...',
             user: this.currentUser ? this.users[this.currentUser].name : 'Unknown'
         });
 
-        try {
-            // 调用Supabase Edge Function
-            const response = await fetch(this.getProxyURL(), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    text: germanText,
-                    apiKey: deeplApiKey,
-                    source_lang: 'DE',
-                    target_lang: 'ZH'
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Supabase代理请求失败 (${response.status}): ${errorData.error || response.statusText}`);
-            }
-
-            const data = await response.json();
-            
-            if (!data.success || !data.translation) {
-                throw new Error('Supabase代理返回数据格式错误');
-            }
-
-            return data.translation.trim();
-
-        } catch (error) {
-            console.error('DeepL Back Translation Error:', error);
-            // 如果DeepL回译失败，使用AI回译作为后备
-            console.log('DeepL回译失败，使用AI回译作为后备方案');
-            return this.aiBackTranslation(germanText);
-        }
+        return this.aiBackTranslation(germanText);
     }
 
-    // AI回译功能（后备方案）
+    // AI回译功能
     async aiBackTranslation(germanText) {
         try {
             const apiKey = this.getCurrentApiKey();
@@ -847,7 +749,7 @@ class APIIntegration {
                     'X-Title': 'Chinese-German-Translation-Assistant'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.0-flash-exp:free',
+                    model: 'google/gemini-2.5-flash',
                     messages: [{
                         role: 'user',
                         content: `请将以下德语文本翻译成中文，只输出中文翻译结果，不要添加任何解释：\n\n${germanText}`
@@ -860,7 +762,7 @@ class APIIntegration {
             if (response.ok) {
                 const data = await response.json();
                 if (data.choices && data.choices[0] && data.choices[0].message) {
-                    return `${data.choices[0].message.content.trim()} (AI回译)`;
+                    return data.choices[0].message.content.trim();
                 }
             }
             

@@ -4,6 +4,7 @@ class TranslationApp {
         this.currentModule = 'cn-to-de';
         this.debounceTimer = null; // 德语译文编辑防抖定时器
         this.currentImageData = null; // 当前上传的图片数据
+        this.originalTextBackup = null; // 原文备份（用于撤销清洗）
         this.init();
     }
 
@@ -67,6 +68,7 @@ class TranslationApp {
     setupCnToDeEvents() {
         const translateBtn = document.getElementById('translate-btn');
         const retranslateBtn = document.getElementById('retranslate-btn');
+        const removeCommentsBtn = document.getElementById('remove-comments-btn');
         const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
         const removeDashBtn = document.getElementById('remove-dash-btn');
         const clearBtn = document.getElementById('clear-btn');
@@ -77,6 +79,7 @@ class TranslationApp {
 
         translateBtn?.addEventListener('click', () => this.handleCnToDeTranslation());
         retranslateBtn?.addEventListener('click', () => this.handleCnToDeTranslation());
+        removeCommentsBtn?.addEventListener('click', () => this.handleRemoveComments());
         duSieSwitchBtn?.addEventListener('click', () => this.handleDuSieSwitch());
         removeDashBtn?.addEventListener('click', () => this.handleRemoveDash());
         clearBtn?.addEventListener('click', () => this.clearCnToDeFields());
@@ -569,6 +572,109 @@ ${deOutput}
         }
     }
 
+    // 去除备注处理
+    async handleRemoveComments() {
+        const cnInput = document.getElementById('cn-input');
+        const cnText = cnInput.value.trim();
+        if (!cnText) {
+            this.showMessage('请输入中文内容', 'error');
+            return;
+        }
+
+        // 检查API是否已配置
+        if (!window.apiIntegration || !window.apiIntegration.isConfigured()) {
+            this.showMessage('请先配置API密钥', 'error');
+            setTimeout(() => {
+                window.apiIntegration?.showAPIConfig();
+            }, 1000);
+            return;
+        }
+
+        // 检查是否已有备份，如果有则表示当前是撤销操作
+        const removeCommentsBtn = document.getElementById('remove-comments-btn');
+        if (this.originalTextBackup !== null) {
+            // 撤销清洗，恢复原文
+            cnInput.value = this.originalTextBackup;
+            this.originalTextBackup = null;
+            removeCommentsBtn.innerHTML = '<span class="btn-icon">🧹</span>去除备注';
+            this.showMessage('已恢复原文', 'success');
+            return;
+        }
+
+        this.showLoading(true);
+
+        try {
+            // 备份原文
+            this.originalTextBackup = cnText;
+            
+            // 使用OpenRouter API去除备注
+            const apiKey = window.apiIntegration.getCurrentApiKey();
+            
+            const prompt = `请清洗以下中文文本，去除其中的甲方备注、编号、角色信息等无关内容，只保留需要翻译的核心内容。
+
+清洗规则：
+1. 去除明显的备注文字（如括号内的说明、注释）
+2. 去除编号（如1、2、3或（一）（二）等）
+3. 去除角色标识（如"客户："、"经理："、"注："等）
+4. 去除格式标记和多余的标点符号
+5. 保留所有实际需要翻译的内容，不要遗漏重要信息
+6. 如果不确定某部分是否应该删除，请保留
+
+只返回清洗后的中文文本，不要添加任何解释或说明。
+
+原始文本：
+${cnText}`;
+
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'Chinese-German-Translation-Assistant-Remove-Comments'
+                },
+                body: JSON.stringify({
+                    model: 'google/gemini-2.5-flash',
+                    messages: [{
+                        role: 'user',
+                        content: prompt
+                    }],
+                    temperature: 0.3,
+                    max_tokens: 1000
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`API请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error('API返回数据格式错误');
+            }
+
+            const cleanedText = data.choices[0].message.content.trim();
+            
+            // 更新中文文本
+            cnInput.value = cleanedText;
+            
+            // 更新按钮状态为撤销模式
+            removeCommentsBtn.innerHTML = '<span class="btn-icon">↩️</span>撤销清洗';
+            
+            this.showMessage('备注清洗完成！如有问题可点击"撤销清洗"恢复原文', 'success');
+
+        } catch (error) {
+            // 如果出错，清除备份
+            this.originalTextBackup = null;
+            this.showMessage(`清洗失败：${error.message}`, 'error');
+            console.error('Remove Comments Error:', error);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
     // Du/Sie转换处理（独立页面使用）
     async handleDuSieConversion(targetType) {
         const input = document.getElementById('du-sie-input').value.trim();
@@ -989,6 +1095,13 @@ ${deOutput}
         if (this.debounceTimer) {
             clearTimeout(this.debounceTimer);
             this.debounceTimer = null;
+        }
+        
+        // 重置原文备份和按钮状态
+        this.originalTextBackup = null;
+        const removeCommentsBtn = document.getElementById('remove-comments-btn');
+        if (removeCommentsBtn) {
+            removeCommentsBtn.innerHTML = '<span class="btn-icon">🧹</span>去除备注';
         }
         
         this.showMessage('已清空所有内容', 'success');

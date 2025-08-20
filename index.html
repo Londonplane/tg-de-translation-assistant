@@ -115,6 +115,10 @@
 
                     <div class="action-section">
                         <div class="btn-group">
+                            <button class="btn btn-secondary" id="remove-comments-btn">
+                                <span class="btn-icon">🧹</span>
+                                去除备注
+                            </button>
                             <button class="btn btn-primary" id="translate-btn">
                                 <span class="btn-icon">🔄</span>
                                 翻译
@@ -384,15 +388,7 @@
                             <button type="button" class="copy-btn" id="copy-openrouter-key" title="复制API密钥">📋</button>
                             <button type="button" class="show-hide-btn" id="toggle-openrouter-key" title="显示/隐藏密钥">👁️</button>
                         </div>
-                        <small>⚠️ 用于AI翻译和语法检查功能</small>
-                        
-                        <label for="deepl-api-key">DeepL API Key <span style="color: #9ca3af;">(可选)</span></label>
-                        <div class="input-with-copy">
-                            <input type="password" id="deepl-api-key" placeholder="请输入您的DeepL API密钥（用于回译验证，可选）">
-                            <button type="button" class="copy-btn" id="copy-deepl-key" title="复制API密钥">📋</button>
-                            <button type="button" class="show-hide-btn" id="toggle-deepl-key" title="显示/隐藏密钥">👁️</button>
-                        </div>
-                        <small>💡 可选配置：用于专业回译验证功能。未配置时将使用AI回译 | <a href="https://www.deepl.com/account/summary" target="_blank" style="color: #2563eb;">获取API密钥</a></small>
+                        <small>⚠️ 用于AI翻译、回译和语法检查功能</small>
                     </div>
                     
                     <div class="config-group">
@@ -413,12 +409,8 @@
                         <label>API服务状态</label>
                         <div class="model-status">
                             <div class="status-item">
-                                <span class="model-name">OpenRouter API (翻译功能)</span>
+                                <span class="model-name">OpenRouter API (翻译和回译功能)</span>
                                 <span class="status-indicator" id="openrouter-status">⚪ 未配置</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="model-name">DeepL API (回译验证)</span>
-                                <span class="status-indicator" id="deepl-status">⚪ 未配置</span>
                             </div>
                         </div>
                     </div>
