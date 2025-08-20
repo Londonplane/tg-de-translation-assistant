@@ -2,52 +2,40 @@
 // 您可以在这里修改每个角色的翻译风格提示词
 
 const ROLE_PROMPTS = {
-    // 教授角色 - 使用Gemini 2.5 Flash
-    professor: {
-        model: "google/gemini-2.5-flash",
-        prompt: "请将以下中文翻译成正式、专业的德语，适合在金融领域的社群中由一位教授对学生或投资者进行解释或分析，语言应学术化、清晰、无情绪色彩。"
-    },
-
-    // 25岁女助理角色 - 使用Mistral Small 3.2 24B
-    "assistant-25": {
+    // 男教授角色 - 权威但亲和的群聊风格
+    "male-professor": {
         model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文翻译成亲切自然的德语，语气年轻女性化，适合在Telegram或WhatsApp群组中用日常口语与投资者沟通，内容与金融、加密货币相关。"
+        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现男性教授的语气，但严格按照原文内容翻译，不要自由发挥。"
     },
 
-    // 35岁女助理角色 - 使用Mistral Small 3.2 24B
-    "assistant-35": {
+    // 女教授角色 - 权威但亲和的群聊风格  
+    "female-professor": {
         model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文翻译成成熟稳重的德语，语气平和可信，适合一位35岁女性在社群中以助理身份提醒或引导用户讨论金融、股市或虚拟货币话题。"
+        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现女性教授的语气，但严格按照原文内容翻译，不要自由发挥。"
     },
 
-    // 公告女助理角色 - 使用Gemini 2.5 Flash
-    "announcement-assistant": {
-        model: "google/gemini-2.5-flash",
-        prompt: "请将以下中文翻译成简洁正式的德语公告风格，用于Telegram或WhatsApp群组中发布金融、股票或虚拟货币相关的重要信息或提醒。"
-    },
-
-    // 水军1号（普通型）- 使用Mistral Small 3.2 24B
-    "troll-1": {
+    // 男助理角色 - 热情帮助的群聊风格
+    "male-assistant": {
         model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文翻译成自然流畅的德语口语，语气正常、平和，适合在群组中进行日常交流和讨论金融、币圈话题，不带明显情绪色彩。"
+        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现男性助理的语气，但严格按照原文内容翻译，不要自由发挥。"
     },
 
-    // 水军2号（情绪型）- 使用Mistral Small 3.2 24B
-    "troll-2": {
+    // 女助理角色 - 贴心帮助的群聊风格
+    "female-assistant": {
         model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文翻译成基础口语化的德语，句子简短，语气夸张、热情，适合在群组中吸引注意力或炒热金融、币圈话题。"
+        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现女性助理的语气，但严格按照原文内容翻译，不要自由发挥。"
     },
 
-    // 水军3号（引导型）- 使用Mistral Small 3.2 24B
-    "troll-3": {
+    // 男水军角色 - 活跃的群聊参与者
+    "male-troll": {
         model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文翻译成互动性强的德语，多使用简单疑问句，语气好奇、自然，适合在Telegram群组中引发用户对金融或币圈事件的讨论。"
+        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现男性群友的语气，但严格按照原文内容翻译，不要自由发挥。"
     },
 
-    // 水军4号（煽动型）- 使用Mistral Small 3.2 24B
-    "troll-4": {
+    // 女水军角色 - 活跃的群聊参与者
+    "female-troll": {
         model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文翻译成具有煽动性、夸张且情绪化的德语，语言激烈，适合在群组中制造争议或带节奏，内容与金融或币圈话题相关。"
+        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现女性群友的语气，但严格按照原文内容翻译，不要自由发挥。"
     }
 };
 
@@ -85,7 +73,7 @@ IGNORIEREN UND NICHT ÜBERSETZEN:
 
 INHALTLICHE REGELN:
 10. „您"/„您好" → „Sie", „你"/„你好" → „Du" (kontextabhängig)
-11. Emoji nur übersetzen wenn im Original vorhanden
+11. Emoji nur übersetzen wenn im Original vorhanden - KEINE Emojis hinzufügen wenn im chinesischen Original keine sind
 12. Ohne Anrede im Original auch keine deutsche Anrede hinzufügen
 13. Originalstil und -länge beibehalten
 14. Technische Begriffe und Eigennamen unverändert lassen
