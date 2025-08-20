@@ -327,20 +327,49 @@ class TranslationApp {
         this.showLoading(true);
         
         try {
-            // 使用OpenRouter API进行德译中翻译
             const apiKey = window.apiIntegration.getCurrentApiKey();
             
-            const prompt = `请把以下德语翻译成恰当的中文。只需要给出一个版本的中文译文，除了译文不要包含其他任何内容，包括不限于解释性注释和引号。
+            // 语言检测和翻译并行进行
+            const [detectedLanguage, translationData] = await Promise.all([
+                // 语言检测
+                this.performLanguageDetection(deInput, apiKey),
+                // 德译中翻译
+                this.performTranslation(deInput, apiKey)
+            ]);
+            
+            // 显示翻译结果
+            document.getElementById('cn-output').value = translationData;
+            
+            // 显示语言检测结果
+            this.showLanguageDetection(detectedLanguage);
+            
+            this.showMessage('翻译完成！', 'success');
 
-德语文本：${deInput}`;
+        } catch (error) {
+            this.showMessage(`翻译失败：${error.message}`, 'error');
+            console.error('德译中翻译错误:', error);
+            // 如果翻译失败，隐藏语言检测结果
+            this.hideLanguageDetection();
+        } finally {
+            this.showLoading(false);
+        }
+    }
 
+    // 执行语言检测
+    async performLanguageDetection(text, apiKey) {
+        try {
+            const prompt = `请检测以下文本的语言。只需要回复语言名称，不要包含任何解释或额外内容。
+支持的语言包括：德语、英语、法语、意大利语、西班牙语、中文、日语、韩语、俄语等。
+
+文本：${text}`;
+            
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
                     'HTTP-Referer': window.location.origin,
-                    'X-Title': 'Chinese-German-Translation-Assistant-DeToCn'
+                    'X-Title': 'Chinese-German-Translation-Assistant-Language-Detection'
                 },
                 body: JSON.stringify({
                     model: 'google/gemini-2.5-flash',
@@ -348,31 +377,97 @@ class TranslationApp {
                         role: 'user',
                         content: prompt
                     }],
-                    temperature: 0.3,
-                    max_tokens: 1000
+                    temperature: 0.1,
+                    max_tokens: 50
                 })
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`API请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+                throw new Error('语言检测请求失败');
             }
 
             const data = await response.json();
-            
             if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                throw new Error('API返回数据格式错误');
+                throw new Error('语言检测数据格式错误');
             }
 
-            const translation = data.choices[0].message.content.trim();
-            document.getElementById('cn-output').value = translation;
-            this.showMessage('翻译完成！', 'success');
-
+            return data.choices[0].message.content.trim();
         } catch (error) {
-            this.showMessage(`翻译失败：${error.message}`, 'error');
-            console.error('德译中翻译错误:', error);
-        } finally {
-            this.showLoading(false);
+            console.warn('语言检测失败:', error);
+            return '未知';
+        }
+    }
+
+    // 执行翻译
+    async performTranslation(deInput, apiKey) {
+        const prompt = `请把以下德语翻译成恰当的中文。只需要给出一个版本的中文译文，除了译文不要包含其他任何内容，包括不限于解释性注释和引号。
+
+德语文本：${deInput}`;
+        
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'Chinese-German-Translation-Assistant-DeToCn'
+            },
+            body: JSON.stringify({
+                model: 'google/gemini-2.5-flash',
+                messages: [{
+                    role: 'user',
+                    content: prompt
+                }],
+                temperature: 0.3,
+                max_tokens: 1000
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`API请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+        }
+        
+        const data = await response.json();
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            throw new Error('API返回数据格式错误');
+        }
+        
+        return data.choices[0].message.content.trim();
+    }
+
+    // 显示语言检测结果
+    showLanguageDetection(detectedLanguage) {
+        const langDetectionDiv = document.getElementById('language-detection');
+        const detectedLangSpan = document.getElementById('detected-language');
+        
+        if (!langDetectionDiv || !detectedLangSpan) return;
+        
+        // 清除之前的样式类
+        langDetectionDiv.classList.remove('german', 'non-german', 'unknown');
+        
+        // 设置检测结果文本
+        detectedLangSpan.textContent = detectedLanguage;
+        
+        // 根据检测结果设置样式
+        const language = detectedLanguage.toLowerCase();
+        if (language.includes('德') || language.includes('german') || language === 'deutsch') {
+            langDetectionDiv.classList.add('german');
+        } else if (detectedLanguage === '未知' || language.includes('unknown')) {
+            langDetectionDiv.classList.add('unknown');
+        } else {
+            langDetectionDiv.classList.add('non-german');
+        }
+        
+        // 显示检测结果
+        langDetectionDiv.style.display = 'block';
+    }
+
+    // 隐藏语言检测结果
+    hideLanguageDetection() {
+        const langDetectionDiv = document.getElementById('language-detection');
+        if (langDetectionDiv) {
+            langDetectionDiv.style.display = 'none';
         }
     }
 

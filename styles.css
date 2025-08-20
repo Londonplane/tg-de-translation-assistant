@@ -1377,4 +1377,86 @@ textarea::-webkit-scrollbar-thumb:hover {
     #ocr-output {
         min-height: 150px;
     }
+}
+
+/* 语言检测区域样式 */
+.language-detection {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.detection-label {
+    color: #6b7280;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.detected-language {
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* 德语检测结果 - 绿色 */
+.language-detection.german {
+    background: #f0f9f4;
+    border-color: #22c55e;
+}
+
+.language-detection.german .detected-language {
+    background: #22c55e;
+    color: white;
+}
+
+/* 非德语检测结果 - 橙色警告 */
+.language-detection.non-german {
+    background: #fffbeb;
+    border-color: #f59e0b;
+}
+
+.language-detection.non-german .detected-language {
+    background: #f59e0b;
+    color: white;
+}
+
+/* 检测失败 - 灰色 */
+.language-detection.unknown {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.language-detection.unknown .detected-language {
+    background: #9ca3af;
+    color: white;
+}
+
+/* 响应式语言检测样式 */
+@media (max-width: 480px) {
+    .language-detection {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .detected-language {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.4rem;
+    }
 } 
