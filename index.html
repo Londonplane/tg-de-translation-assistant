@@ -66,7 +66,7 @@
                     <!-- 任务1 -->
                     <div class="task-area" id="task-area-1" data-task-id="1">
                         <div class="task-header">
-                            <h3 class="task-title">任务1</h3>
+                            <input type="text" class="task-title-input" id="task-title-1" value="任务1" placeholder="点击编辑任务名称...">
                         </div>
                         
                         <div class="content-grid">
@@ -176,7 +176,7 @@
                     <!-- 任务2 -->
                     <div class="task-area" id="task-area-2" data-task-id="2" style="display: none;">
                         <div class="task-header">
-                            <h3 class="task-title">任务2</h3>
+                            <input type="text" class="task-title-input" id="task-title-2" value="任务2" placeholder="点击编辑任务名称...">
                             <button class="remove-task-btn" id="remove-task-btn-2" title="删除此任务">×</button>
                         </div>
                         
@@ -287,7 +287,7 @@
                     <!-- 任务3 -->
                     <div class="task-area" id="task-area-3" data-task-id="3" style="display: none;">
                         <div class="task-header">
-                            <h3 class="task-title">任务3</h3>
+                            <input type="text" class="task-title-input" id="task-title-3" value="任务3" placeholder="点击编辑任务名称...">
                             <button class="remove-task-btn" id="remove-task-btn-3" title="删除此任务">×</button>
                         </div>
                         
@@ -749,7 +749,7 @@
                 <div class="modal-body tutorial-modal-body">
                     <div class="tutorial-section">
                         <h4>🎯 功能概述</h4>
-                        <p>中译德模块支持最多3个并行任务，每个任务可以独立进行翻译操作，非常适合处理多个不同的文本内容。</p>
+                        <p>中译德模块支持最多3个并行任务，每个任务可以独立进行翻译操作，非常适合处理多个不同的文本内容。每个任务标题可以自定义编辑，方便您管理不同类型的翻译工作。</p>
                     </div>
 
                     <div class="tutorial-section">
@@ -836,6 +836,7 @@
                         <h4>⚡ 使用技巧</h4>
                         <ul class="tutorial-tips">
                             <li><strong>多任务并行</strong>：点击"添加任务"可同时处理多个文本</li>
+                            <li><strong>自定义标题</strong>：点击任务标题（如"任务1"）可编辑为自定义名称，自动保存</li>
                             <li><strong>实时编辑</strong>：德语译文可直接编辑，会自动重新回译</li>
                             <li><strong>词汇表</strong>：点击右下角📚按钮管理专业术语</li>
                             <li><strong>人称检测</strong>：翻译后会在德语译文标签右侧显示使用的人称形式</li>

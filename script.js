@@ -11,6 +11,10 @@ class MultiTaskManager {
         this.debounceTimers = new Map(); // 每个任务的防抖定时器
         this.originalTextBackups = new Map(); // 每个任务的原文备份
         this.translationTimers = new Map(); // 每个任务的翻译计时器
+        this.taskTitles = new Map(); // 任务标题存储
+        
+        // 初始化任务标题功能
+        this.initTaskTitles();
     }
 
     // 添加任务
@@ -205,6 +209,99 @@ class MultiTaskManager {
         const timerValue = document.getElementById(`timer-value-${taskId}`);
         if (timerValue) {
             timerValue.textContent = timeString;
+        }
+    }
+
+    // 初始化任务标题功能
+    initTaskTitles() {
+        // 从localStorage恢复任务标题
+        this.loadTaskTitles();
+        
+        // 为每个任务标题输入框添加事件监听器
+        for (let i = 1; i <= this.maxTasks; i++) {
+            const titleInput = document.getElementById(`task-title-${i}`);
+            if (titleInput) {
+                // 失去焦点时保存
+                titleInput.addEventListener('blur', () => {
+                    this.saveTaskTitle(i, titleInput.value.trim() || `任务${i}`);
+                });
+                
+                // 按Enter键时保存并失去焦点
+                titleInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        titleInput.blur();
+                    }
+                });
+                
+                // 实时保存（防抖）
+                titleInput.addEventListener('input', () => {
+                    // 防抖处理
+                    clearTimeout(this.titleSaveTimers?.[i]);
+                    this.titleSaveTimers = this.titleSaveTimers || {};
+                    this.titleSaveTimers[i] = setTimeout(() => {
+                        this.saveTaskTitle(i, titleInput.value.trim() || `任务${i}`);
+                    }, 500);
+                });
+            }
+        }
+    }
+
+    // 保存任务标题
+    saveTaskTitle(taskId, title) {
+        this.taskTitles.set(taskId, title);
+        
+        // 保存到localStorage
+        const savedTitles = {};
+        this.taskTitles.forEach((title, id) => {
+            savedTitles[id] = title;
+        });
+        localStorage.setItem('taskTitles', JSON.stringify(savedTitles));
+    }
+
+    // 加载任务标题
+    loadTaskTitles() {
+        try {
+            const savedTitles = localStorage.getItem('taskTitles');
+            if (savedTitles) {
+                const titles = JSON.parse(savedTitles);
+                for (let i = 1; i <= this.maxTasks; i++) {
+                    const title = titles[i] || `任务${i}`;
+                    this.taskTitles.set(i, title);
+                    
+                    // 更新DOM中的标题
+                    const titleInput = document.getElementById(`task-title-${i}`);
+                    if (titleInput) {
+                        titleInput.value = title;
+                    }
+                }
+            } else {
+                // 如果没有保存的标题，使用默认标题
+                for (let i = 1; i <= this.maxTasks; i++) {
+                    this.taskTitles.set(i, `任务${i}`);
+                }
+            }
+        } catch (error) {
+            console.warn('加载任务标题失败:', error);
+            // 使用默认标题
+            for (let i = 1; i <= this.maxTasks; i++) {
+                this.taskTitles.set(i, `任务${i}`);
+            }
+        }
+    }
+
+    // 获取任务标题
+    getTaskTitle(taskId) {
+        return this.taskTitles.get(taskId) || `任务${taskId}`;
+    }
+
+    // 重置任务标题
+    resetTaskTitle(taskId) {
+        const defaultTitle = `任务${taskId}`;
+        this.saveTaskTitle(taskId, defaultTitle);
+        
+        const titleInput = document.getElementById(`task-title-${taskId}`);
+        if (titleInput) {
+            titleInput.value = defaultTitle;
         }
     }
 }
