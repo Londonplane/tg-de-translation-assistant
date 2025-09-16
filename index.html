@@ -71,7 +71,14 @@
                         
                         <div class="content-grid">
                             <div class="input-section">
-                                <label for="cn-input-1">中文文本</label>
+                                <div class="input-label-row">
+                                    <label for="cn-input-1">中文文本</label>
+                                    <div class="timer-display" id="timer-display-1" style="display: none;">
+                                        <span class="timer-icon">⏱️</span>
+                                        <span class="timer-text">结果获得时间：</span>
+                                        <span class="timer-value" id="timer-value-1">00:00</span>
+                                    </div>
+                                </div>
                                 <textarea id="cn-input-1" placeholder="请输入要翻译的中文内容..."></textarea>
                             </div>
 
@@ -109,15 +116,16 @@
 
                             <div class="output-section">
                                 <div class="output-group">
-                                    <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                    <div class="output-label-row">
+                                        <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                        <div id="pronoun-info-1" class="pronoun-info" style="display: none;"></div>
+                                    </div>
                                     <textarea id="de-output-1" placeholder="德语翻译结果将显示在这里..."></textarea>
-                                    <div id="pronoun-info-1" class="pronoun-info"></div>
                                 </div>
 
                                 <div class="output-group">
                                     <label>回译检查</label>
                                     <textarea id="back-translation-1" readonly placeholder="德语回译成中文的结果..."></textarea>
-                                    <div id="back-translation-note-1" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
                                 </div>
                             </div>
 
@@ -174,7 +182,14 @@
                         
                         <div class="content-grid">
                             <div class="input-section">
-                                <label for="cn-input-2">中文文本</label>
+                                <div class="input-label-row">
+                                    <label for="cn-input-2">中文文本</label>
+                                    <div class="timer-display" id="timer-display-2" style="display: none;">
+                                        <span class="timer-icon">⏱️</span>
+                                        <span class="timer-text">结果获得时间：</span>
+                                        <span class="timer-value" id="timer-value-2">00:00</span>
+                                    </div>
+                                </div>
                                 <textarea id="cn-input-2" placeholder="请输入要翻译的中文内容..."></textarea>
                             </div>
 
@@ -212,15 +227,16 @@
 
                             <div class="output-section">
                                 <div class="output-group">
-                                    <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                    <div class="output-label-row">
+                                        <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                        <div id="pronoun-info-2" class="pronoun-info" style="display: none;"></div>
+                                    </div>
                                     <textarea id="de-output-2" placeholder="德语翻译结果将显示在这里..."></textarea>
-                                    <div id="pronoun-info-2" class="pronoun-info"></div>
                                 </div>
 
                                 <div class="output-group">
                                     <label>回译检查</label>
                                     <textarea id="back-translation-2" readonly placeholder="德语回译成中文的结果..."></textarea>
-                                    <div id="back-translation-note-2" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
                                 </div>
                             </div>
 
@@ -277,7 +293,14 @@
                         
                         <div class="content-grid">
                             <div class="input-section">
-                                <label for="cn-input-3">中文文本</label>
+                                <div class="input-label-row">
+                                    <label for="cn-input-3">中文文本</label>
+                                    <div class="timer-display" id="timer-display-3" style="display: none;">
+                                        <span class="timer-icon">⏱️</span>
+                                        <span class="timer-text">结果获得时间：</span>
+                                        <span class="timer-value" id="timer-value-3">00:00</span>
+                                    </div>
+                                </div>
                                 <textarea id="cn-input-3" placeholder="请输入要翻译的中文内容..."></textarea>
                             </div>
 
@@ -315,15 +338,16 @@
 
                             <div class="output-section">
                                 <div class="output-group">
-                                    <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                    <div class="output-label-row">
+                                        <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                        <div id="pronoun-info-3" class="pronoun-info" style="display: none;"></div>
+                                    </div>
                                     <textarea id="de-output-3" placeholder="德语翻译结果将显示在这里..."></textarea>
-                                    <div id="pronoun-info-3" class="pronoun-info"></div>
                                 </div>
 
                                 <div class="output-group">
                                     <label>回译检查</label>
                                     <textarea id="back-translation-3" readonly placeholder="德语回译成中文的结果..."></textarea>
-                                    <div id="back-translation-note-3" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
                                 </div>
                             </div>
 
@@ -814,7 +838,8 @@
                             <li><strong>多任务并行</strong>：点击"添加任务"可同时处理多个文本</li>
                             <li><strong>实时编辑</strong>：德语译文可直接编辑，会自动重新回译</li>
                             <li><strong>词汇表</strong>：点击右下角📚按钮管理专业术语</li>
-                            <li><strong>人称检测</strong>：翻译后会显示使用的人称形式</li>
+                            <li><strong>人称检测</strong>：翻译后会在德语译文标签右侧显示使用的人称形式</li>
+                            <li><strong>结果计时</strong>：翻译完成后会在中文文本标签右侧显示结果获得时间，最长计时20分钟</li>
                             <li><strong>快捷键</strong>：Ctrl+Enter 快速执行翻译</li>
                         </ul>
                     </div>
@@ -826,7 +851,7 @@
                             <li>在"中文文本"框输入要翻译的内容</li>
                             <li>选择合适的翻译角色</li>
                             <li>点击"翻译"按钮开始翻译</li>
-                            <li>查看德语译文和回译结果</li>
+                            <li>查看德语译文和回译结果，翻译完成后会自动开始计时</li>
                             <li>根据需要使用其他功能按钮优化译文</li>
                         </ol>
                     </div>

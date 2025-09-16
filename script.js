@@ -10,6 +10,7 @@ class MultiTaskManager {
         };
         this.debounceTimers = new Map(); // 每个任务的防抖定时器
         this.originalTextBackups = new Map(); // 每个任务的原文备份
+        this.translationTimers = new Map(); // 每个任务的翻译计时器
     }
 
     // 添加任务
@@ -60,13 +61,11 @@ class MultiTaskManager {
         const deOutput = document.getElementById(`de-output-${taskId}`);
         const backTranslation = document.getElementById(`back-translation-${taskId}`);
         const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
-        const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
         
         if (cnInput) cnInput.value = '';
         if (deOutput) deOutput.value = '';
         if (backTranslation) backTranslation.value = '';
         if (pronounInfo) pronounInfo.style.display = 'none';
-        if (backTranslationNote) backTranslationNote.style.display = 'none';
         
         // 重置按钮状态
         this.resetTaskButtons(taskId);
@@ -77,6 +76,9 @@ class MultiTaskManager {
             this.debounceTimers.delete(taskId);
         }
         this.originalTextBackups.delete(taskId);
+        
+        // 清除翻译计时器
+        this.clearTranslationTimer(taskId);
     }
 
     // 重置任务按钮状态
@@ -126,6 +128,84 @@ class MultiTaskManager {
     // 检查任务是否可见
     isTaskVisible(taskId) {
         return this.visibleTasks.has(taskId);
+    }
+
+    // 启动翻译计时器
+    startTranslationTimer(taskId) {
+        // 先停止可能存在的计时器
+        this.stopTranslationTimer(taskId);
+        
+        const timerState = {
+            startTime: Date.now(),
+            interval: null,
+            isRunning: true
+        };
+        
+        // 显示计时器元素
+        const timerDisplay = document.getElementById(`timer-display-${taskId}`);
+        if (timerDisplay) {
+            timerDisplay.style.display = 'block';
+        }
+        
+        // 开始计时
+        timerState.interval = setInterval(() => {
+            this.updateTimerDisplay(taskId);
+        }, 1000);
+        
+        this.translationTimers.set(taskId, timerState);
+        
+        // 初始显示
+        this.updateTimerDisplay(taskId);
+    }
+
+    // 停止翻译计时器
+    stopTranslationTimer(taskId) {
+        const timerState = this.translationTimers.get(taskId);
+        if (timerState && timerState.interval) {
+            clearInterval(timerState.interval);
+            timerState.isRunning = false;
+            this.translationTimers.set(taskId, timerState);
+        }
+        
+        // 隐藏计时器元素
+        const timerDisplay = document.getElementById(`timer-display-${taskId}`);
+        if (timerDisplay) {
+            timerDisplay.style.display = 'none';
+        }
+    }
+
+    // 清除翻译计时器
+    clearTranslationTimer(taskId) {
+        this.stopTranslationTimer(taskId);
+        this.translationTimers.delete(taskId);
+    }
+
+    // 更新计时器显示
+    updateTimerDisplay(taskId) {
+        const timerState = this.translationTimers.get(taskId);
+        if (!timerState || !timerState.isRunning) return;
+        
+        const elapsed = Math.floor((Date.now() - timerState.startTime) / 1000);
+        
+        // 20分钟 = 1200秒
+        if (elapsed >= 1200) {
+            this.stopTranslationTimer(taskId);
+            // 显示20:00+
+            const timerValue = document.getElementById(`timer-value-${taskId}`);
+            if (timerValue) {
+                timerValue.textContent = '20:00+';
+            }
+            return;
+        }
+        
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        const timerValue = document.getElementById(`timer-value-${taskId}`);
+        if (timerValue) {
+            timerValue.textContent = timeString;
+        }
     }
 }
 
@@ -456,19 +536,13 @@ class TranslationApp {
             const pronounType = window.apiIntegration.detectPronounUsage(deOutput);
             const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
             if (pronounInfo) {
-                pronounInfo.textContent = `德语译文使用的是：${pronounType}`;
+                pronounInfo.textContent = `人称：${pronounType}`;
                 pronounInfo.style.display = 'block';
             }
 
             // 执行回译检查
             const backTranslation = await window.apiIntegration.translateGermanToChinese(deOutput);
             document.getElementById(`back-translation-${taskId}`).value = backTranslation;
-            
-            // 显示回译备注
-            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
-            if (backTranslationNote) {
-                backTranslationNote.style.display = 'block';
-            }
 
             // 静默更新，不显示成功消息，避免干扰用户编辑
         } catch (error) {
@@ -498,6 +572,9 @@ class TranslationApp {
 
         this.showTaskLoading(taskId, true);
         
+        // 停止之前的计时器（重新翻译）
+        this.multiTaskManager.stopTranslationTimer(taskId);
+        
         try {
             // 使用真实API进行翻译
             const result = await window.apiIntegration.translateChineseToGerman(cnInput, role);
@@ -507,14 +584,8 @@ class TranslationApp {
             
             // 显示人称信息
             const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
-            pronounInfo.textContent = `德语译文使用的是：${result.pronounType}`;
+            pronounInfo.textContent = `人称：${result.pronounType}`;
             pronounInfo.style.display = 'block';
-            
-            // 显示回译备注
-            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
-            if (backTranslationNote) {
-                backTranslationNote.style.display = 'block';
-            }
             
             // 启用"你您切换"、"去短横线"和"去除表情"按钮
             const duSieSwitchBtn = document.getElementById(`du-sie-switch-btn-${taskId}`);
@@ -529,6 +600,9 @@ class TranslationApp {
             if (removeEmojiBtn) {
                 removeEmojiBtn.disabled = false;
             }
+            
+            // 启动翻译完成计时器
+            this.multiTaskManager.startTranslationTimer(taskId);
             
             this.showMessage(`任务${taskId}翻译完成！`, 'success');
         } catch (error) {
@@ -775,13 +849,7 @@ ${deOutput}
             // 检测新的人称类型并更新显示
             const newPronounType = window.apiIntegration.detectPronounUsage(convertedText);
             const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
-            pronounInfo.textContent = `德语译文使用的是：${newPronounType}`;
-            
-            // 确保回译备注显示
-            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
-            if (backTranslationNote) {
-                backTranslationNote.style.display = 'block';
-            }
+            pronounInfo.textContent = `人称：${newPronounType}`;
             
             // 重新进行回译检查
             try {
@@ -871,13 +939,7 @@ ${deOutput}
             const pronounInfo = document.getElementById('pronoun-info');
             if (pronounInfo.style.display !== 'none') {
                 const currentPronounType = window.apiIntegration.detectPronounUsage(processedText);
-                pronounInfo.textContent = `德语译文使用的是：${currentPronounType}`;
-            }
-            
-            // 确保回译备注显示
-            const backTranslationNote = document.getElementById('back-translation-note');
-            if (backTranslationNote) {
-                backTranslationNote.style.display = 'block';
+                pronounInfo.textContent = `人称：${currentPronounType}`;
             }
             
             // 重新进行回译检查
@@ -962,13 +1024,7 @@ ${deOutput}
             const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
             if (pronounInfo && pronounInfo.style.display !== 'none') {
                 const currentPronounType = window.apiIntegration.detectPronounUsage(processedText);
-                pronounInfo.textContent = `德语译文使用的是：${currentPronounType}`;
-            }
-            
-            // 确保回译备注显示
-            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
-            if (backTranslationNote) {
-                backTranslationNote.style.display = 'block';
+                pronounInfo.textContent = `人称：${currentPronounType}`;
             }
             
             // 重新进行回译检查
@@ -1391,12 +1447,6 @@ ${cnText}`;
         document.getElementById(`back-translation-${taskId}`).value = '';
         document.getElementById(`pronoun-info-${taskId}`).style.display = 'none';
         
-        // 隐藏回译备注
-        const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
-        if (backTranslationNote) {
-            backTranslationNote.style.display = 'none';
-        }
-        
         // 禁用"你您切换"、"去短横线"和"去除表情"按钮
         const duSieSwitchBtn = document.getElementById(`du-sie-switch-btn-${taskId}`);
         if (duSieSwitchBtn) {
@@ -1417,6 +1467,9 @@ ${cnText}`;
             clearTimeout(existingTimer);
             this.multiTaskManager.debounceTimers.delete(taskId);
         }
+        
+        // 停止翻译计时器
+        this.multiTaskManager.stopTranslationTimer(taskId);
         
         // 重置原文备份和按钮状态
         this.multiTaskManager.originalTextBackups.delete(taskId);

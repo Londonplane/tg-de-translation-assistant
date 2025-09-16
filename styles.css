@@ -411,6 +411,57 @@ label {
     font-size: 0.95rem;
 }
 
+/* 输入区域标签行 */
+.input-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.input-label-row label {
+    margin-bottom: 0;
+}
+
+/* 输出区域标签行 */
+.output-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.output-label-row label {
+    margin-bottom: 0;
+}
+
+/* 翻译完成计时器 */
+.timer-display {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.timer-icon {
+    font-size: 0.9rem;
+}
+
+.timer-text {
+    font-weight: 500;
+}
+
+.timer-value {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #3b82f6;
+}
+
 textarea {
     width: 100%;
     min-height: 150px;
@@ -590,14 +641,14 @@ textarea::placeholder {
 }
 
 .pronoun-info {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
+    padding: 0.25rem 0.5rem;
     background: #fef3c7;
-    border: 2px solid #f59e0b;
-    border-radius: 8px;
-    font-size: 0.9rem;
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    font-size: 0.8rem;
     color: #92400e;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .grammar-result,
