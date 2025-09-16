@@ -197,6 +197,9 @@ class TranslationApp {
         
         // OCR识别模块
         this.setupOCREvents();
+        
+        // 教程模态框事件
+        this.setupTutorialEvents();
     }
 
     // 中译德模块事件
@@ -383,6 +386,57 @@ class TranslationApp {
         copyBtn?.addEventListener('click', () => this.copyToClipboard('ocr-output'));
         clearBtn?.addEventListener('click', () => this.clearOCRFields());
         removeImageBtn?.addEventListener('click', () => this.removeImage());
+    }
+
+    // 教程模态框事件
+    setupTutorialEvents() {
+        const tutorialBtn = document.getElementById('tutorial-btn');
+        const tutorialModal = document.getElementById('tutorial-modal');
+        const closeTutorialModal = document.getElementById('close-tutorial-modal');
+        const closeTutorial = document.getElementById('close-tutorial');
+
+        // 打开教程模态框
+        tutorialBtn?.addEventListener('click', () => this.showTutorial());
+
+        // 关闭教程模态框 - X按钮
+        closeTutorialModal?.addEventListener('click', () => this.hideTutorial());
+
+        // 关闭教程模态框 - "开始使用"按钮
+        closeTutorial?.addEventListener('click', () => this.hideTutorial());
+
+        // 点击模态框背景关闭
+        tutorialModal?.addEventListener('click', (e) => {
+            if (e.target === tutorialModal) {
+                this.hideTutorial();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !tutorialModal?.classList.contains('hidden')) {
+                this.hideTutorial();
+            }
+        });
+    }
+
+    // 显示教程模态框
+    showTutorial() {
+        const tutorialModal = document.getElementById('tutorial-modal');
+        if (tutorialModal) {
+            tutorialModal.classList.remove('hidden');
+            // 防止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    // 隐藏教程模态框
+    hideTutorial() {
+        const tutorialModal = document.getElementById('tutorial-modal');
+        if (tutorialModal) {
+            tutorialModal.classList.add('hidden');
+            // 恢复背景滚动
+            document.body.style.overflow = '';
+        }
     }
 
     // 德语文本编辑处理（自动回译）

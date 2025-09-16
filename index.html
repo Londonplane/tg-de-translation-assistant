@@ -49,6 +49,10 @@
             <!-- 模块1: 中译德 -->
             <div id="cn-to-de" class="module active">
                 <div class="module-header">
+                    <button class="tutorial-btn" id="tutorial-btn" title="查看使用教程">
+                        <span class="btn-icon">📚</span>
+                        使用教程
+                    </button>
                     <h2>中文翻译成德语</h2>
                     <p class="module-desc">选择角色和场景，获得精准的德语翻译</p>
                     <button class="add-task-btn" id="add-task-btn" title="添加新的翻译任务">
@@ -707,6 +711,128 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" id="close-vocabulary">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 教程模态框 -->
+        <div id="tutorial-modal" class="modal hidden">
+            <div class="modal-content tutorial-modal-content">
+                <div class="modal-header">
+                    <h3>📚 中译德功能使用教程</h3>
+                    <button class="close-btn" id="close-tutorial-modal">&times;</button>
+                </div>
+                <div class="modal-body tutorial-modal-body">
+                    <div class="tutorial-section">
+                        <h4>🎯 功能概述</h4>
+                        <p>中译德模块支持最多3个并行任务，每个任务可以独立进行翻译操作，非常适合处理多个不同的文本内容。</p>
+                    </div>
+
+                    <div class="tutorial-section">
+                        <h4>👥 选择翻译角色</h4>
+                        <div class="tutorial-roles">
+                            <div class="role-item">
+                                <span class="role-icon">👨‍🎓</span>
+                                <div class="role-desc">
+                                    <strong>男教授</strong>: 权威但友善的群聊风格，适合男性教授在投资群中分享见解
+                                </div>
+                            </div>
+                            <div class="role-item">
+                                <span class="role-icon">👩‍🎓</span>
+                                <div class="role-desc">
+                                    <strong>女教授</strong>: 权威但温和的群聊风格，适合女性教授在投资群中提供指导
+                                </div>
+                            </div>
+                            <div class="role-item">
+                                <span class="role-icon">👨‍💼</span>
+                                <div class="role-desc">
+                                    <strong>男助理</strong>: 热情主动的群聊风格，适合男性助理为群友提供帮助
+                                </div>
+                            </div>
+                            <div class="role-item">
+                                <span class="role-icon">👩‍💼</span>
+                                <div class="role-desc">
+                                    <strong>女助理</strong>: 贴心细致的群聊风格，适合女性助理温馨提醒和帮助
+                                </div>
+                            </div>
+                            <div class="role-item">
+                                <span class="role-icon">🙋‍♂️</span>
+                                <div class="role-desc">
+                                    <strong>男水军</strong>: 活跃幽默的群聊风格，能带动气氛引发互动
+                                </div>
+                            </div>
+                            <div class="role-item">
+                                <span class="role-icon">🙋‍♀️</span>
+                                <div class="role-desc">
+                                    <strong>女水军</strong>: 活跃生动的群聊风格，善于活跃氛围制造话题
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tutorial-section">
+                        <h4>🔧 功能按钮说明</h4>
+                        <div class="tutorial-buttons">
+                            <div class="button-item">
+                                <span class="button-demo btn-demo primary">🔄 翻译</span>
+                                <p>执行翻译，会自动进行回译验证并显示人称形式（Du/Sie）</p>
+                            </div>
+                            <div class="button-item">
+                                <span class="button-demo btn-demo secondary">🧹 去除备注</span>
+                                <p>清理中文原文中的称呼、备注、编号等无关内容，可撤销</p>
+                            </div>
+                            <div class="button-item">
+                                <span class="button-demo btn-demo secondary">🔄 你您切换</span>
+                                <p>智能转换德语译文的人称形式（Du ↔ Sie）</p>
+                            </div>
+                            <div class="button-item">
+                                <span class="button-demo btn-demo secondary">✂️ 去短横线</span>
+                                <p>将德语译文中的短横线替换为逗号</p>
+                            </div>
+                            <div class="button-item">
+                                <span class="button-demo btn-demo secondary">😶 去除表情</span>
+                                <p>移除德语译文中的表情符号</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tutorial-section">
+                        <h4>📋 复制功能</h4>
+                        <div class="tutorial-copy">
+                            <div class="copy-item">
+                                <span class="button-demo btn-demo outline">原文</span>
+                                <span class="button-demo btn-demo outline">译文</span>
+                                <span class="button-demo btn-demo outline">原文+译文</span>
+                            </div>
+                            <p>支持一键复制不同内容组合到剪贴板</p>
+                        </div>
+                    </div>
+
+                    <div class="tutorial-section">
+                        <h4>⚡ 使用技巧</h4>
+                        <ul class="tutorial-tips">
+                            <li><strong>多任务并行</strong>：点击"添加任务"可同时处理多个文本</li>
+                            <li><strong>实时编辑</strong>：德语译文可直接编辑，会自动重新回译</li>
+                            <li><strong>词汇表</strong>：点击右下角📚按钮管理专业术语</li>
+                            <li><strong>人称检测</strong>：翻译后会显示使用的人称形式</li>
+                            <li><strong>快捷键</strong>：Ctrl+Enter 快速执行翻译</li>
+                        </ul>
+                    </div>
+
+                    <div class="tutorial-section">
+                        <h4>🔑 开始使用</h4>
+                        <ol class="tutorial-steps">
+                            <li>确保已在右下角⚙️设置中配置API密钥</li>
+                            <li>在"中文文本"框输入要翻译的内容</li>
+                            <li>选择合适的翻译角色</li>
+                            <li>点击"翻译"按钮开始翻译</li>
+                            <li>查看德语译文和回译结果</li>
+                            <li>根据需要使用其他功能按钮优化译文</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="close-tutorial">开始使用</button>
                 </div>
             </div>
         </div>
