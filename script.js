@@ -1,10 +1,142 @@
+// 多任务管理器
+class MultiTaskManager {
+    constructor() {
+        this.maxTasks = 3;
+        this.visibleTasks = new Set([1]); // 默认只显示任务1
+        this.taskStates = {
+            1: { visible: true, deletable: false },
+            2: { visible: false, deletable: true },
+            3: { visible: false, deletable: true }
+        };
+        this.debounceTimers = new Map(); // 每个任务的防抖定时器
+        this.originalTextBackups = new Map(); // 每个任务的原文备份
+    }
+
+    // 添加任务
+    addTask() {
+        for (let i = 2; i <= this.maxTasks; i++) {
+            if (!this.taskStates[i].visible) {
+                this.showTask(i);
+                return i;
+            }
+        }
+        return null; // 已达到最大任务数
+    }
+
+    // 显示任务
+    showTask(taskId) {
+        if (taskId > this.maxTasks || taskId < 1) return false;
+        
+        const taskArea = document.getElementById(`task-area-${taskId}`);
+        if (taskArea) {
+            taskArea.style.display = 'block';
+            this.taskStates[taskId].visible = true;
+            this.visibleTasks.add(taskId);
+            this.updateMultiTaskLayout();
+            return true;
+        }
+        return false;
+    }
+
+    // 隐藏任务
+    hideTask(taskId) {
+        if (taskId === 1 || taskId > this.maxTasks || taskId < 1) return false; // 任务1不可删除
+        
+        const taskArea = document.getElementById(`task-area-${taskId}`);
+        if (taskArea) {
+            taskArea.style.display = 'none';
+            this.taskStates[taskId].visible = false;
+            this.visibleTasks.delete(taskId);
+            this.clearTaskContent(taskId);
+            this.updateMultiTaskLayout();
+            return true;
+        }
+        return false;
+    }
+
+    // 清空任务内容
+    clearTaskContent(taskId) {
+        const cnInput = document.getElementById(`cn-input-${taskId}`);
+        const deOutput = document.getElementById(`de-output-${taskId}`);
+        const backTranslation = document.getElementById(`back-translation-${taskId}`);
+        const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
+        const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
+        
+        if (cnInput) cnInput.value = '';
+        if (deOutput) deOutput.value = '';
+        if (backTranslation) backTranslation.value = '';
+        if (pronounInfo) pronounInfo.style.display = 'none';
+        if (backTranslationNote) backTranslationNote.style.display = 'none';
+        
+        // 重置按钮状态
+        this.resetTaskButtons(taskId);
+        
+        // 清除定时器和备份
+        if (this.debounceTimers.has(taskId)) {
+            clearTimeout(this.debounceTimers.get(taskId));
+            this.debounceTimers.delete(taskId);
+        }
+        this.originalTextBackups.delete(taskId);
+    }
+
+    // 重置任务按钮状态
+    resetTaskButtons(taskId) {
+        const buttons = [
+            `du-sie-switch-btn-${taskId}`,
+            `remove-dash-btn-${taskId}`,
+            `remove-emoji-btn-${taskId}`
+        ];
+        
+        buttons.forEach(buttonId => {
+            const btn = document.getElementById(buttonId);
+            if (btn) btn.disabled = true;
+        });
+
+        // 重置去除备注按钮
+        const removeCommentsBtn = document.getElementById(`remove-comments-btn-${taskId}`);
+        if (removeCommentsBtn) {
+            removeCommentsBtn.innerHTML = '<span class="btn-icon">🧹</span>去除备注';
+        }
+    }
+
+    // 更新多任务布局
+    updateMultiTaskLayout() {
+        const container = document.querySelector('.multi-task-container');
+        if (container) {
+            if (this.visibleTasks.size > 1) {
+                container.classList.add('multi-column');
+            } else {
+                container.classList.remove('multi-column');
+            }
+        }
+
+        // 更新添加任务按钮状态
+        const addTaskBtn = document.getElementById('add-task-btn');
+        if (addTaskBtn) {
+            const canAddMore = this.visibleTasks.size < this.maxTasks;
+            addTaskBtn.style.display = canAddMore ? 'flex' : 'none';
+        }
+    }
+
+    // 获取可见任务列表
+    getVisibleTasks() {
+        return Array.from(this.visibleTasks);
+    }
+
+    // 检查任务是否可见
+    isTaskVisible(taskId) {
+        return this.visibleTasks.has(taskId);
+    }
+}
+
 // 应用状态管理
 class TranslationApp {
     constructor() {
         this.currentModule = 'cn-to-de';
-        this.debounceTimer = null; // 德语译文编辑防抖定时器
+        this.debounceTimer = null; // 德语译文编辑防抖定时器（保留向后兼容）
         this.currentImageData = null; // 当前上传的图片数据
-        this.originalTextBackup = null; // 原文备份（用于撤销清洗）
+        this.originalTextBackup = null; // 原文备份（保留向后兼容）
+        this.multiTaskManager = new MultiTaskManager(); // 多任务管理器
         this.init();
     }
 
@@ -12,6 +144,9 @@ class TranslationApp {
         this.setupNavigation();
         this.setupEventListeners();
         this.showLoadingMessage();
+        
+        // 初始化多任务管理器布局
+        this.multiTaskManager.updateMultiTaskLayout();
     }
 
     // 导航切换功能
@@ -66,43 +201,80 @@ class TranslationApp {
 
     // 中译德模块事件
     setupCnToDeEvents() {
-        const translateBtn = document.getElementById('translate-btn');
-        const retranslateBtn = document.getElementById('retranslate-btn');
-        const removeCommentsBtn = document.getElementById('remove-comments-btn');
-        const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
-        const removeDashBtn = document.getElementById('remove-dash-btn');
-        const removeEmojiBtn = document.getElementById('remove-emoji-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const copyOriginal = document.getElementById('copy-original');
-        const copyTranslation = document.getElementById('copy-translation');
-        const copyBoth = document.getElementById('copy-both');
-        const deOutput = document.getElementById('de-output');
+        // 设置多任务按钮事件
+        const addTaskBtn = document.getElementById('add-task-btn');
+        addTaskBtn?.addEventListener('click', () => this.handleAddTask());
 
-        translateBtn?.addEventListener('click', () => this.handleCnToDeTranslation());
-        retranslateBtn?.addEventListener('click', () => this.handleCnToDeTranslation());
-        removeCommentsBtn?.addEventListener('click', () => this.handleRemoveComments());
-        duSieSwitchBtn?.addEventListener('click', () => this.handleDuSieSwitch());
-        removeDashBtn?.addEventListener('click', () => this.handleRemoveDash());
-        removeEmojiBtn?.addEventListener('click', () => this.handleRemoveEmoji());
-        clearBtn?.addEventListener('click', () => this.clearCnToDeFields());
+        // 为每个任务设置事件监听器
+        for (let taskId = 1; taskId <= 3; taskId++) {
+            this.setupSingleTaskEvents(taskId);
+        }
+    }
+
+    // 为单个任务设置事件监听器
+    setupSingleTaskEvents(taskId) {
+        const translateBtn = document.getElementById(`translate-btn-${taskId}`);
+        const retranslateBtn = document.getElementById(`retranslate-btn-${taskId}`);
+        const removeCommentsBtn = document.getElementById(`remove-comments-btn-${taskId}`);
+        const duSieSwitchBtn = document.getElementById(`du-sie-switch-btn-${taskId}`);
+        const removeDashBtn = document.getElementById(`remove-dash-btn-${taskId}`);
+        const removeEmojiBtn = document.getElementById(`remove-emoji-btn-${taskId}`);
+        const clearBtn = document.getElementById(`clear-btn-${taskId}`);
+        const copyOriginal = document.getElementById(`copy-original-${taskId}`);
+        const copyTranslation = document.getElementById(`copy-translation-${taskId}`);
+        const copyBoth = document.getElementById(`copy-both-${taskId}`);
+        const deOutput = document.getElementById(`de-output-${taskId}`);
+        const removeTaskBtn = document.getElementById(`remove-task-btn-${taskId}`);
+
+        translateBtn?.addEventListener('click', () => this.handleCnToDeTranslation(taskId));
+        retranslateBtn?.addEventListener('click', () => this.handleCnToDeTranslation(taskId));
+        removeCommentsBtn?.addEventListener('click', () => this.handleRemoveComments(taskId));
+        duSieSwitchBtn?.addEventListener('click', () => this.handleDuSieSwitch(taskId));
+        removeDashBtn?.addEventListener('click', () => this.handleRemoveDash(taskId));
+        removeEmojiBtn?.addEventListener('click', () => this.handleRemoveEmoji(taskId));
+        clearBtn?.addEventListener('click', () => this.clearCnToDeFields(taskId));
         
-        copyOriginal?.addEventListener('click', () => this.copyToClipboard('cn-input'));
-        copyTranslation?.addEventListener('click', () => this.copyToClipboard('de-output'));
-        copyBoth?.addEventListener('click', () => this.copyBoth());
+        copyOriginal?.addEventListener('click', () => this.copyToClipboard(`cn-input-${taskId}`));
+        copyTranslation?.addEventListener('click', () => this.copyToClipboard(`de-output-${taskId}`));
+        copyBoth?.addEventListener('click', () => this.copyBoth(taskId));
+        
+        // 删除任务按钮（任务1没有删除按钮）
+        removeTaskBtn?.addEventListener('click', () => this.handleRemoveTask(taskId));
 
         // 德语译文编辑监听（延迟检测）
         if (deOutput) {
             deOutput.addEventListener('input', () => {
                 // 清除之前的定时器
-                if (this.debounceTimer) {
-                    clearTimeout(this.debounceTimer);
+                const existingTimer = this.multiTaskManager.debounceTimers.get(taskId);
+                if (existingTimer) {
+                    clearTimeout(existingTimer);
                 }
                 
                 // 设置1秒延迟，用户停止输入后触发回译
-                this.debounceTimer = setTimeout(() => {
-                    this.handleGermanTextEdit();
+                const timer = setTimeout(() => {
+                    this.handleGermanTextEdit(taskId);
                 }, 1000);
+                this.multiTaskManager.debounceTimers.set(taskId, timer);
             });
+        }
+    }
+
+    // 添加任务处理
+    handleAddTask() {
+        const newTaskId = this.multiTaskManager.addTask();
+        if (newTaskId) {
+            this.showMessage(`任务${newTaskId}已添加`, 'success');
+        } else {
+            this.showMessage('已达到最大任务数量限制', 'warning');
+        }
+    }
+
+    // 删除任务处理
+    handleRemoveTask(taskId) {
+        if (this.multiTaskManager.hideTask(taskId)) {
+            this.showMessage(`任务${taskId}已删除`, 'success');
+        } else {
+            this.showMessage('无法删除此任务', 'error');
         }
     }
 
@@ -214,8 +386,8 @@ class TranslationApp {
     }
 
     // 德语文本编辑处理（自动回译）
-    async handleGermanTextEdit() {
-        const deOutput = document.getElementById('de-output').value.trim();
+    async handleGermanTextEdit(taskId = 1) {
+        const deOutput = document.getElementById(`de-output-${taskId}`).value.trim();
         if (!deOutput) {
             return; // 如果德语译文为空，不执行回译
         }
@@ -228,7 +400,7 @@ class TranslationApp {
         try {
             // 更新人称检测
             const pronounType = window.apiIntegration.detectPronounUsage(deOutput);
-            const pronounInfo = document.getElementById('pronoun-info');
+            const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
             if (pronounInfo) {
                 pronounInfo.textContent = `德语译文使用的是：${pronounType}`;
                 pronounInfo.style.display = 'block';
@@ -236,10 +408,10 @@ class TranslationApp {
 
             // 执行回译检查
             const backTranslation = await window.apiIntegration.translateGermanToChinese(deOutput);
-            document.getElementById('back-translation').value = backTranslation;
+            document.getElementById(`back-translation-${taskId}`).value = backTranslation;
             
             // 显示回译备注
-            const backTranslationNote = document.getElementById('back-translation-note');
+            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
             if (backTranslationNote) {
                 backTranslationNote.style.display = 'block';
             }
@@ -252,14 +424,14 @@ class TranslationApp {
     }
 
     // 中译德翻译处理
-    async handleCnToDeTranslation() {
-        const cnInput = document.getElementById('cn-input').value.trim();
+    async handleCnToDeTranslation(taskId = 1) {
+        const cnInput = document.getElementById(`cn-input-${taskId}`).value.trim();
         if (!cnInput) {
             this.showMessage('请输入中文内容', 'error');
             return;
         }
 
-        const role = document.querySelector('input[name="role"]:checked').value;
+        const role = document.querySelector(`input[name="role-${taskId}"]:checked`).value;
 
         // 检查API是否已配置
         if (!window.apiIntegration || !window.apiIntegration.isConfigured()) {
@@ -270,46 +442,46 @@ class TranslationApp {
             return;
         }
 
-        this.showLoading(true);
+        this.showTaskLoading(taskId, true);
         
         try {
             // 使用真实API进行翻译
             const result = await window.apiIntegration.translateChineseToGerman(cnInput, role);
             
-            document.getElementById('de-output').value = result.translation;
-            document.getElementById('back-translation').value = result.backTranslation;
+            document.getElementById(`de-output-${taskId}`).value = result.translation;
+            document.getElementById(`back-translation-${taskId}`).value = result.backTranslation;
             
             // 显示人称信息
-            const pronounInfo = document.getElementById('pronoun-info');
+            const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
             pronounInfo.textContent = `德语译文使用的是：${result.pronounType}`;
             pronounInfo.style.display = 'block';
             
             // 显示回译备注
-            const backTranslationNote = document.getElementById('back-translation-note');
+            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
             if (backTranslationNote) {
                 backTranslationNote.style.display = 'block';
             }
             
             // 启用"你您切换"、"去短横线"和"去除表情"按钮
-            const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
+            const duSieSwitchBtn = document.getElementById(`du-sie-switch-btn-${taskId}`);
             if (duSieSwitchBtn) {
                 duSieSwitchBtn.disabled = false;
             }
-            const removeDashBtn = document.getElementById('remove-dash-btn');
+            const removeDashBtn = document.getElementById(`remove-dash-btn-${taskId}`);
             if (removeDashBtn) {
                 removeDashBtn.disabled = false;
             }
-            const removeEmojiBtn = document.getElementById('remove-emoji-btn');
+            const removeEmojiBtn = document.getElementById(`remove-emoji-btn-${taskId}`);
             if (removeEmojiBtn) {
                 removeEmojiBtn.disabled = false;
             }
             
-            this.showMessage(`翻译完成！使用模型：${result.model}`, 'success');
+            this.showMessage(`任务${taskId}翻译完成！使用模型：${result.model}`, 'success');
         } catch (error) {
-            this.showMessage(`翻译失败：${error.message}`, 'error');
+            this.showMessage(`任务${taskId}翻译失败：${error.message}`, 'error');
             console.error('Translation error:', error);
         } finally {
-            this.showLoading(false);
+            this.showTaskLoading(taskId, false);
         }
     }
 
@@ -478,8 +650,8 @@ class TranslationApp {
     }
 
     // 中译德页面的Du/Sie智能切换
-    async handleDuSieSwitch() {
-        const deOutput = document.getElementById('de-output').value.trim();
+    async handleDuSieSwitch(taskId = 1) {
+        const deOutput = document.getElementById(`de-output-${taskId}`).value.trim();
         if (!deOutput) {
             this.showMessage('没有德语译文可以转换', 'error');
             return;
@@ -494,7 +666,7 @@ class TranslationApp {
             return;
         }
 
-        this.showLoading(true);
+        this.showTaskLoading(taskId, true, 'du-sie');
 
         try {
             // 使用OpenRouter API进行Du/Sie智能切换
@@ -544,15 +716,15 @@ ${deOutput}
             const convertedText = data.choices[0].message.content.trim();
             
             // 更新德语译文
-            document.getElementById('de-output').value = convertedText;
+            document.getElementById(`de-output-${taskId}`).value = convertedText;
             
             // 检测新的人称类型并更新显示
             const newPronounType = window.apiIntegration.detectPronounUsage(convertedText);
-            const pronounInfo = document.getElementById('pronoun-info');
+            const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
             pronounInfo.textContent = `德语译文使用的是：${newPronounType}`;
             
             // 确保回译备注显示
-            const backTranslationNote = document.getElementById('back-translation-note');
+            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
             if (backTranslationNote) {
                 backTranslationNote.style.display = 'block';
             }
@@ -560,25 +732,25 @@ ${deOutput}
             // 重新进行回译检查
             try {
                 const backTranslation = await window.apiIntegration.translateGermanToChinese(convertedText);
-                document.getElementById('back-translation').value = backTranslation;
+                document.getElementById(`back-translation-${taskId}`).value = backTranslation;
             } catch (backTranslationError) {
                 console.warn('回译更新失败:', backTranslationError);
                 // 回译失败不影响主要功能
             }
 
-            this.showMessage('Du/Sie转换完成！', 'success');
+            this.showMessage(`任务${taskId}Du/Sie转换完成！`, 'success');
 
         } catch (error) {
-            this.showMessage(`Du/Sie转换失败：${error.message}`, 'error');
+            this.showMessage(`任务${taskId}Du/Sie转换失败：${error.message}`, 'error');
             console.error('Du/Sie Switch Error:', error);
         } finally {
-            this.showLoading(false);
+            this.showTaskLoading(taskId, false, 'du-sie');
         }
     }
 
     // 去短横线处理
-    async handleRemoveDash() {
-        const deOutput = document.getElementById('de-output').value.trim();
+    async handleRemoveDash(taskId = 1) {
+        const deOutput = document.getElementById(`de-output-${taskId}`).value.trim();
         if (!deOutput) {
             this.showMessage('没有德语译文可以处理', 'error');
             return;
@@ -593,7 +765,7 @@ ${deOutput}
             return;
         }
 
-        this.showLoading(true);
+        this.showTaskLoading(taskId, true, 'remove-dash');
 
         try {
             // 使用OpenRouter API去掉短横线
@@ -669,13 +841,13 @@ ${deOutput}
             this.showMessage(`去短横线失败：${error.message}`, 'error');
             console.error('Remove Dash Error:', error);
         } finally {
-            this.showLoading(false);
+            this.showTaskLoading(taskId, false, 'remove-dash');
         }
     }
 
     // 去除表情处理
-    async handleRemoveEmoji() {
-        const deOutput = document.getElementById('de-output').value.trim();
+    async handleRemoveEmoji(taskId = 1) {
+        const deOutput = document.getElementById(`de-output-${taskId}`).value.trim();
         if (!deOutput) {
             this.showMessage('没有德语译文可以处理', 'error');
             return;
@@ -688,7 +860,7 @@ ${deOutput}
             }, 1000);
             return;
         }
-        this.showLoading(true);
+        this.showTaskLoading(taskId, true, 'remove-emoji');
         try {
             // 使用OpenRouter API去除表情符号
             const apiKey = window.apiIntegration.getCurrentApiKey();
@@ -730,17 +902,17 @@ ${deOutput}
             const processedText = data.choices[0].message.content.trim();
             
             // 更新德语译文
-            document.getElementById('de-output').value = processedText;
+            document.getElementById(`de-output-${taskId}`).value = processedText;
             
             // 保持人称信息显示
-            const pronounInfo = document.getElementById('pronoun-info');
-            if (pronounInfo.style.display !== 'none') {
+            const pronounInfo = document.getElementById(`pronoun-info-${taskId}`);
+            if (pronounInfo && pronounInfo.style.display !== 'none') {
                 const currentPronounType = window.apiIntegration.detectPronounUsage(processedText);
                 pronounInfo.textContent = `德语译文使用的是：${currentPronounType}`;
             }
             
             // 确保回译备注显示
-            const backTranslationNote = document.getElementById('back-translation-note');
+            const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
             if (backTranslationNote) {
                 backTranslationNote.style.display = 'block';
             }
@@ -748,24 +920,24 @@ ${deOutput}
             // 重新进行回译检查
             try {
                 const backTranslation = await window.apiIntegration.translateGermanToChinese(processedText);
-                document.getElementById('back-translation').value = backTranslation;
+                document.getElementById(`back-translation-${taskId}`).value = backTranslation;
             } catch (backTranslationError) {
                 console.warn('回译更新失败:', backTranslationError);
                 // 回译失败不影响主要功能
             }
             
-            this.showMessage('表情符号已去除！', 'success');
+            this.showMessage(`任务${taskId}表情符号已去除！`, 'success');
         } catch (error) {
-            this.showMessage(`去除表情失败：${error.message}`, 'error');
+            this.showMessage(`任务${taskId}去除表情失败：${error.message}`, 'error');
             console.error('Remove Emoji Error:', error);
         } finally {
-            this.showLoading(false);
+            this.showTaskLoading(taskId, false, 'remove-emoji');
         }
     }
 
     // 去除备注处理
-    async handleRemoveComments() {
-        const cnInput = document.getElementById('cn-input');
+    async handleRemoveComments(taskId = 1) {
+        const cnInput = document.getElementById(`cn-input-${taskId}`);
         const cnText = cnInput.value.trim();
         if (!cnText) {
             this.showMessage('请输入中文内容', 'error');
@@ -782,21 +954,22 @@ ${deOutput}
         }
 
         // 检查是否已有备份，如果有则表示当前是撤销操作
-        const removeCommentsBtn = document.getElementById('remove-comments-btn');
-        if (this.originalTextBackup !== null) {
+        const removeCommentsBtn = document.getElementById(`remove-comments-btn-${taskId}`);
+        const backup = this.multiTaskManager.originalTextBackups.get(taskId);
+        if (backup !== undefined) {
             // 撤销清洗，恢复原文
-            cnInput.value = this.originalTextBackup;
-            this.originalTextBackup = null;
+            cnInput.value = backup;
+            this.multiTaskManager.originalTextBackups.delete(taskId);
             removeCommentsBtn.innerHTML = '<span class="btn-icon">🧹</span>去除备注';
-            this.showMessage('已恢复原文', 'success');
+            this.showMessage(`任务${taskId}已恢复原文`, 'success');
             return;
         }
 
-        this.showLoading(true);
+        this.showTaskLoading(taskId, true, 'remove-comments');
 
         try {
             // 备份原文
-            this.originalTextBackup = cnText;
+            this.multiTaskManager.originalTextBackups.set(taskId, cnText);
             
             // 使用OpenRouter API去除备注
             const apiKey = window.apiIntegration.getCurrentApiKey();
@@ -854,15 +1027,15 @@ ${cnText}`;
             // 更新按钮状态为撤销模式
             removeCommentsBtn.innerHTML = '<span class="btn-icon">↩️</span>撤销清洗';
             
-            this.showMessage('备注清洗完成！如有问题可点击"撤销清洗"恢复原文', 'success');
+            this.showMessage(`任务${taskId}备注清洗完成！如有问题可点击"撤销清洗"恢复原文`, 'success');
 
         } catch (error) {
             // 如果出错，清除备份
-            this.originalTextBackup = null;
-            this.showMessage(`清洗失败：${error.message}`, 'error');
+            this.multiTaskManager.originalTextBackups.delete(taskId);
+            this.showMessage(`任务${taskId}清洗失败：${error.message}`, 'error');
             console.error('Remove Comments Error:', error);
         } finally {
-            this.showLoading(false);
+            this.showTaskLoading(taskId, false, 'remove-comments');
         }
     }
 
@@ -1158,46 +1331,47 @@ ${cnText}`;
     }
 
     // 清空中译德字段
-    clearCnToDeFields() {
-        document.getElementById('cn-input').value = '';
-        document.getElementById('de-output').value = '';
-        document.getElementById('back-translation').value = '';
-        document.getElementById('pronoun-info').style.display = 'none';
+    clearCnToDeFields(taskId = 1) {
+        document.getElementById(`cn-input-${taskId}`).value = '';
+        document.getElementById(`de-output-${taskId}`).value = '';
+        document.getElementById(`back-translation-${taskId}`).value = '';
+        document.getElementById(`pronoun-info-${taskId}`).style.display = 'none';
         
         // 隐藏回译备注
-        const backTranslationNote = document.getElementById('back-translation-note');
+        const backTranslationNote = document.getElementById(`back-translation-note-${taskId}`);
         if (backTranslationNote) {
             backTranslationNote.style.display = 'none';
         }
         
         // 禁用"你您切换"、"去短横线"和"去除表情"按钮
-        const duSieSwitchBtn = document.getElementById('du-sie-switch-btn');
+        const duSieSwitchBtn = document.getElementById(`du-sie-switch-btn-${taskId}`);
         if (duSieSwitchBtn) {
             duSieSwitchBtn.disabled = true;
         }
-        const removeDashBtn = document.getElementById('remove-dash-btn');
+        const removeDashBtn = document.getElementById(`remove-dash-btn-${taskId}`);
         if (removeDashBtn) {
             removeDashBtn.disabled = true;
         }
-        const removeEmojiBtn = document.getElementById('remove-emoji-btn');
+        const removeEmojiBtn = document.getElementById(`remove-emoji-btn-${taskId}`);
         if (removeEmojiBtn) {
             removeEmojiBtn.disabled = true;
         }
         
         // 清除可能存在的编辑定时器
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-            this.debounceTimer = null;
+        const existingTimer = this.multiTaskManager.debounceTimers.get(taskId);
+        if (existingTimer) {
+            clearTimeout(existingTimer);
+            this.multiTaskManager.debounceTimers.delete(taskId);
         }
         
         // 重置原文备份和按钮状态
-        this.originalTextBackup = null;
-        const removeCommentsBtn = document.getElementById('remove-comments-btn');
+        this.multiTaskManager.originalTextBackups.delete(taskId);
+        const removeCommentsBtn = document.getElementById(`remove-comments-btn-${taskId}`);
         if (removeCommentsBtn) {
             removeCommentsBtn.innerHTML = '<span class="btn-icon">🧹</span>去除备注';
         }
         
-        this.showMessage('已清空所有内容', 'success');
+        this.showMessage(`任务${taskId}已清空所有内容`, 'success');
     }
 
     // 清空德语检查字段
@@ -1408,9 +1582,9 @@ ${cnText}`;
     }
 
     // 复制原文+译文
-    async copyBoth() {
-        const original = document.getElementById('cn-input').value;
-        const translation = document.getElementById('de-output').value;
+    async copyBoth(taskId = 1) {
+        const original = document.getElementById(`cn-input-${taskId}`).value;
+        const translation = document.getElementById(`de-output-${taskId}`).value;
         
         if (!original.trim() || !translation.trim()) {
             this.showMessage('请确保原文和译文都有内容', 'error');
@@ -1421,7 +1595,7 @@ ${cnText}`;
         
         try {
             await navigator.clipboard.writeText(combinedText);
-            this.showMessage('已复制原文和译文到剪贴板', 'success');
+            this.showMessage(`任务${taskId}已复制原文和译文到剪贴板`, 'success');
         } catch (error) {
             this.fallbackCopyTextToClipboard(combinedText);
         }
@@ -1445,7 +1619,114 @@ ${cnText}`;
         document.body.removeChild(textArea);
     }
 
-    // 显示加载状态
+    // 显示任务级加载状态
+    showTaskLoading(taskId, show, buttonType = 'translate') {
+        const taskArea = document.getElementById(`task-area-${taskId}`);
+        
+        if (show) {
+            // 添加加载中的视觉反馈
+            if (taskArea) taskArea.classList.add('task-loading');
+            
+            // 根据按钮类型设置不同的加载状态
+            switch (buttonType) {
+                case 'translate':
+                    const translateBtn = document.getElementById(`translate-btn-${taskId}`);
+                    const retranslateBtn = document.getElementById(`retranslate-btn-${taskId}`);
+                    if (translateBtn) {
+                        translateBtn.innerHTML = '<span class="btn-icon">⏳</span>翻译中...';
+                        translateBtn.disabled = true;
+                    }
+                    if (retranslateBtn) {
+                        retranslateBtn.innerHTML = '<span class="btn-icon">⏳</span>翻译中...';
+                        retranslateBtn.disabled = true;
+                    }
+                    break;
+                case 'du-sie':
+                    const duSieBtn = document.getElementById(`du-sie-btn-${taskId}`);
+                    if (duSieBtn) {
+                        duSieBtn.disabled = true;
+                        duSieBtn.innerHTML = '<span class="btn-icon">⏳</span>转换中...';
+                    }
+                    break;
+                case 'remove-dash':
+                    const removeDashBtn = document.getElementById(`remove-dash-btn-${taskId}`);
+                    if (removeDashBtn) {
+                        removeDashBtn.disabled = true;
+                        removeDashBtn.innerHTML = '<span class="btn-icon">⏳</span>处理中...';
+                    }
+                    break;
+                case 'remove-emoji':
+                    const removeEmojiBtn = document.getElementById(`remove-emoji-btn-${taskId}`);
+                    if (removeEmojiBtn) {
+                        removeEmojiBtn.disabled = true;
+                        removeEmojiBtn.innerHTML = '<span class="btn-icon">⏳</span>处理中...';
+                    }
+                    break;
+                case 'remove-comments':
+                    const removeCommentsBtn = document.getElementById(`remove-comments-btn-${taskId}`);
+                    if (removeCommentsBtn) {
+                        removeCommentsBtn.disabled = true;
+                        removeCommentsBtn.innerHTML = '<span class="btn-icon">⏳</span>清洗中...';
+                    }
+                    break;
+            }
+        } else {
+            // 移除加载中的视觉反馈
+            if (taskArea) taskArea.classList.remove('task-loading');
+            
+            // 恢复按钮状态
+            switch (buttonType) {
+                case 'translate':
+                    const translateBtn = document.getElementById(`translate-btn-${taskId}`);
+                    const retranslateBtn = document.getElementById(`retranslate-btn-${taskId}`);
+                    if (translateBtn) {
+                        translateBtn.innerHTML = '<span class="btn-icon">🔄</span>翻译';
+                        translateBtn.disabled = false;
+                    }
+                    if (retranslateBtn) {
+                        retranslateBtn.innerHTML = '<span class="btn-icon">🔄</span>重新翻译';
+                        retranslateBtn.disabled = false;
+                    }
+                    break;
+                case 'du-sie':
+                    const duSieBtn = document.getElementById(`du-sie-btn-${taskId}`);
+                    if (duSieBtn) {
+                        duSieBtn.disabled = false;
+                        duSieBtn.innerHTML = '<span class="btn-icon">↔️</span>Du/Sie';
+                    }
+                    break;
+                case 'remove-dash':
+                    const removeDashBtn = document.getElementById(`remove-dash-btn-${taskId}`);
+                    if (removeDashBtn) {
+                        removeDashBtn.disabled = false;
+                        removeDashBtn.innerHTML = '<span class="btn-icon">➖</span>去短横线';
+                    }
+                    break;
+                case 'remove-emoji':
+                    const removeEmojiBtn = document.getElementById(`remove-emoji-btn-${taskId}`);
+                    if (removeEmojiBtn) {
+                        removeEmojiBtn.disabled = false;
+                        removeEmojiBtn.innerHTML = '<span class="btn-icon">😐</span>去表情';
+                    }
+                    break;
+                case 'remove-comments':
+                    const removeCommentsBtn = document.getElementById(`remove-comments-btn-${taskId}`);
+                    if (removeCommentsBtn) {
+                        removeCommentsBtn.disabled = false;
+                        // 检查是否有备份来决定按钮文本
+                        const backup = this.multiTaskManager.originalTextBackups.get(taskId);
+                        if (backup !== undefined) {
+                            removeCommentsBtn.innerHTML = '<span class="btn-icon">↩️</span>撤销清洗';
+                        } else {
+                            removeCommentsBtn.innerHTML = '<span class="btn-icon">🧹</span>去除备注';
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
+    // 显示全局加载状态（保留用于其他模块）
     showLoading(show) {
         const loading = document.getElementById('loading');
         if (show) {

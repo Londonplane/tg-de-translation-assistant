@@ -51,98 +51,318 @@
                 <div class="module-header">
                     <h2>中文翻译成德语</h2>
                     <p class="module-desc">选择角色和场景，获得精准的德语翻译</p>
+                    <button class="add-task-btn" id="add-task-btn" title="添加新的翻译任务">
+                        <span class="btn-icon">➕</span>
+                        添加任务
+                    </button>
                 </div>
                 
-                <div class="content-grid">
-                    <div class="input-section">
-                        <label for="cn-input">中文文本</label>
-                        <textarea id="cn-input" placeholder="请输入要翻译的中文内容..."></textarea>
-                    </div>
+                <!-- 多任务容器 -->
+                <div class="multi-task-container">
+                    <!-- 任务1 -->
+                    <div class="task-area" id="task-area-1" data-task-id="1">
+                        <div class="task-header">
+                            <h3 class="task-title">任务1</h3>
+                        </div>
+                        
+                        <div class="content-grid">
+                            <div class="input-section">
+                                <label for="cn-input-1">中文文本</label>
+                                <textarea id="cn-input-1" placeholder="请输入要翻译的中文内容..."></textarea>
+                            </div>
 
-                    <div class="settings-section">
-                        <div class="setting-group">
-                            <label>选择翻译角色</label>
-                            <div class="radio-group">
-                                <label class="radio-option" title="权威但友善的群聊风格，适合男性教授在投资群中分享见解">
-                                    <input type="radio" name="role" value="male-professor" checked>
-                                    <span>👨‍🎓 男教授</span>
-                                </label>
-                                <label class="radio-option" title="权威但温和的群聊风格，适合女性教授在投资群中提供指导">
-                                    <input type="radio" name="role" value="female-professor">
-                                    <span>👩‍🎓 女教授</span>
-                                </label>
-                                <label class="radio-option" title="热情主动的群聊风格，适合男性助理为群友提供帮助">
-                                    <input type="radio" name="role" value="male-assistant">
-                                    <span>👨‍💼 男助理</span>
-                                </label>
-                                <label class="radio-option" title="贴心细致的群聊风格，适合女性助理温馨提醒和帮助">
-                                    <input type="radio" name="role" value="female-assistant">
-                                    <span>👩‍💼 女助理</span>
-                                </label>
-                                <label class="radio-option" title="活跃幽默的群聊风格，能带动气氛引发互动">
-                                    <input type="radio" name="role" value="male-troll">
-                                    <span>🙋‍♂️ 男水军</span>
-                                </label>
-                                <label class="radio-option" title="活跃生动的群聊风格，善于活跃氛围制造话题">
-                                    <input type="radio" name="role" value="female-troll">
-                                    <span>🙋‍♀️ 女水军</span>
-                                </label>
+                            <div class="settings-section">
+                                <div class="setting-group">
+                                    <label>选择翻译角色</label>
+                                    <div class="radio-group">
+                                        <label class="radio-option" title="权威但友善的群聊风格，适合男性教授在投资群中分享见解">
+                                            <input type="radio" name="role-1" value="male-professor" checked>
+                                            <span>👨‍🎓 男教授</span>
+                                        </label>
+                                        <label class="radio-option" title="权威但温和的群聊风格，适合女性教授在投资群中提供指导">
+                                            <input type="radio" name="role-1" value="female-professor">
+                                            <span>👩‍🎓 女教授</span>
+                                        </label>
+                                        <label class="radio-option" title="热情主动的群聊风格，适合男性助理为群友提供帮助">
+                                            <input type="radio" name="role-1" value="male-assistant">
+                                            <span>👨‍💼 男助理</span>
+                                        </label>
+                                        <label class="radio-option" title="贴心细致的群聊风格，适合女性助理温馨提醒和帮助">
+                                            <input type="radio" name="role-1" value="female-assistant">
+                                            <span>👩‍💼 女助理</span>
+                                        </label>
+                                        <label class="radio-option" title="活跃幽默的群聊风格，能带动气氛引发互动">
+                                            <input type="radio" name="role-1" value="male-troll">
+                                            <span>🙋‍♂️ 男水军</span>
+                                        </label>
+                                        <label class="radio-option" title="活跃生动的群聊风格，善于活跃氛围制造话题">
+                                            <input type="radio" name="role-1" value="female-troll">
+                                            <span>🙋‍♀️ 女水军</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="output-section">
+                                <div class="output-group">
+                                    <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                    <textarea id="de-output-1" placeholder="德语翻译结果将显示在这里..."></textarea>
+                                    <div id="pronoun-info-1" class="pronoun-info"></div>
+                                </div>
+
+                                <div class="output-group">
+                                    <label>回译检查</label>
+                                    <textarea id="back-translation-1" readonly placeholder="德语回译成中文的结果..."></textarea>
+                                    <div id="back-translation-note-1" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
+                                </div>
+                            </div>
+
+                            <div class="action-section">
+                                <div class="btn-group">
+                                    <button class="btn btn-secondary" id="remove-comments-btn-1">
+                                        <span class="btn-icon">🧹</span>
+                                        去除备注
+                                    </button>
+                                    <button class="btn btn-primary" id="translate-btn-1">
+                                        <span class="btn-icon">🔄</span>
+                                        翻译
+                                    </button>
+                                    <button class="btn btn-secondary" id="clear-btn-1">
+                                        <span class="btn-icon">🗑️</span>
+                                        清空
+                                    </button>
+                                    <button class="btn btn-secondary" id="retranslate-btn-1">
+                                        <span class="btn-icon">🔄</span>
+                                        重新翻译
+                                    </button>
+                                    <button class="btn btn-secondary" id="du-sie-switch-btn-1" disabled>
+                                        <span class="btn-icon">🔄</span>
+                                        你您切换
+                                    </button>
+                                    <button class="btn btn-secondary" id="remove-dash-btn-1" disabled>
+                                        <span class="btn-icon">✂️</span>
+                                        去短横线
+                                    </button>
+                                    <button class="btn btn-secondary" id="remove-emoji-btn-1" disabled>
+                                        <span class="btn-icon">😶</span>
+                                        去除表情
+                                    </button>
+                                </div>
+                                
+                                <div class="copy-group">
+                                    <label>一键复制</label>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline" id="copy-original-1">原文</button>
+                                        <button class="btn btn-outline" id="copy-translation-1">译文</button>
+                                        <button class="btn btn-outline" id="copy-both-1">原文+译文</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="output-section">
-                        <div class="output-group">
-                            <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
-                            <textarea id="de-output" placeholder="德语翻译结果将显示在这里..."></textarea>
-                            <div id="pronoun-info" class="pronoun-info"></div>
+                    <!-- 任务2 -->
+                    <div class="task-area" id="task-area-2" data-task-id="2" style="display: none;">
+                        <div class="task-header">
+                            <h3 class="task-title">任务2</h3>
+                            <button class="remove-task-btn" id="remove-task-btn-2" title="删除此任务">×</button>
                         </div>
+                        
+                        <div class="content-grid">
+                            <div class="input-section">
+                                <label for="cn-input-2">中文文本</label>
+                                <textarea id="cn-input-2" placeholder="请输入要翻译的中文内容..."></textarea>
+                            </div>
 
-                        <div class="output-group">
-                            <label>回译检查</label>
-                            <textarea id="back-translation" readonly placeholder="德语回译成中文的结果..."></textarea>
-                            <div id="back-translation-note" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
+                            <div class="settings-section">
+                                <div class="setting-group">
+                                    <label>选择翻译角色</label>
+                                    <div class="radio-group">
+                                        <label class="radio-option" title="权威但友善的群聊风格，适合男性教授在投资群中分享见解">
+                                            <input type="radio" name="role-2" value="male-professor" checked>
+                                            <span>👨‍🎓 男教授</span>
+                                        </label>
+                                        <label class="radio-option" title="权威但温和的群聊风格，适合女性教授在投资群中提供指导">
+                                            <input type="radio" name="role-2" value="female-professor">
+                                            <span>👩‍🎓 女教授</span>
+                                        </label>
+                                        <label class="radio-option" title="热情主动的群聊风格，适合男性助理为群友提供帮助">
+                                            <input type="radio" name="role-2" value="male-assistant">
+                                            <span>👨‍💼 男助理</span>
+                                        </label>
+                                        <label class="radio-option" title="贴心细致的群聊风格，适合女性助理温馨提醒和帮助">
+                                            <input type="radio" name="role-2" value="female-assistant">
+                                            <span>👩‍💼 女助理</span>
+                                        </label>
+                                        <label class="radio-option" title="活跃幽默的群聊风格，能带动气氛引发互动">
+                                            <input type="radio" name="role-2" value="male-troll">
+                                            <span>🙋‍♂️ 男水军</span>
+                                        </label>
+                                        <label class="radio-option" title="活跃生动的群聊风格，善于活跃氛围制造话题">
+                                            <input type="radio" name="role-2" value="female-troll">
+                                            <span>🙋‍♀️ 女水军</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="output-section">
+                                <div class="output-group">
+                                    <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                    <textarea id="de-output-2" placeholder="德语翻译结果将显示在这里..."></textarea>
+                                    <div id="pronoun-info-2" class="pronoun-info"></div>
+                                </div>
+
+                                <div class="output-group">
+                                    <label>回译检查</label>
+                                    <textarea id="back-translation-2" readonly placeholder="德语回译成中文的结果..."></textarea>
+                                    <div id="back-translation-note-2" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
+                                </div>
+                            </div>
+
+                            <div class="action-section">
+                                <div class="btn-group">
+                                    <button class="btn btn-secondary" id="remove-comments-btn-2">
+                                        <span class="btn-icon">🧹</span>
+                                        去除备注
+                                    </button>
+                                    <button class="btn btn-primary" id="translate-btn-2">
+                                        <span class="btn-icon">🔄</span>
+                                        翻译
+                                    </button>
+                                    <button class="btn btn-secondary" id="clear-btn-2">
+                                        <span class="btn-icon">🗑️</span>
+                                        清空
+                                    </button>
+                                    <button class="btn btn-secondary" id="retranslate-btn-2">
+                                        <span class="btn-icon">🔄</span>
+                                        重新翻译
+                                    </button>
+                                    <button class="btn btn-secondary" id="du-sie-switch-btn-2" disabled>
+                                        <span class="btn-icon">🔄</span>
+                                        你您切换
+                                    </button>
+                                    <button class="btn btn-secondary" id="remove-dash-btn-2" disabled>
+                                        <span class="btn-icon">✂️</span>
+                                        去短横线
+                                    </button>
+                                    <button class="btn btn-secondary" id="remove-emoji-btn-2" disabled>
+                                        <span class="btn-icon">😶</span>
+                                        去除表情
+                                    </button>
+                                </div>
+                                
+                                <div class="copy-group">
+                                    <label>一键复制</label>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline" id="copy-original-2">原文</button>
+                                        <button class="btn btn-outline" id="copy-translation-2">译文</button>
+                                        <button class="btn btn-outline" id="copy-both-2">原文+译文</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="action-section">
-                        <div class="btn-group">
-                            <button class="btn btn-secondary" id="remove-comments-btn">
-                                <span class="btn-icon">🧹</span>
-                                去除备注
-                            </button>
-                            <button class="btn btn-primary" id="translate-btn">
-                                <span class="btn-icon">🔄</span>
-                                翻译
-                            </button>
-                            <button class="btn btn-secondary" id="clear-btn">
-                                <span class="btn-icon">🗑️</span>
-                                清空
-                            </button>
-                            <button class="btn btn-secondary" id="retranslate-btn">
-                                <span class="btn-icon">🔄</span>
-                                重新翻译
-                            </button>
-                            <button class="btn btn-secondary" id="du-sie-switch-btn" disabled>
-                                <span class="btn-icon">🔄</span>
-                                你您切换
-                            </button>
-                            <button class="btn btn-secondary" id="remove-dash-btn" disabled>
-                                <span class="btn-icon">✂️</span>
-                                去短横线
-                            </button>
-                            <button class="btn btn-secondary" id="remove-emoji-btn" disabled>
-                                <span class="btn-icon">😶</span>
-                                去除表情
-                            </button>
+                    <!-- 任务3 -->
+                    <div class="task-area" id="task-area-3" data-task-id="3" style="display: none;">
+                        <div class="task-header">
+                            <h3 class="task-title">任务3</h3>
+                            <button class="remove-task-btn" id="remove-task-btn-3" title="删除此任务">×</button>
                         </div>
                         
-                        <div class="copy-group">
-                            <label>一键复制</label>
-                            <div class="btn-group">
-                                <button class="btn btn-outline" id="copy-original">原文</button>
-                                <button class="btn btn-outline" id="copy-translation">译文</button>
-                                <button class="btn btn-outline" id="copy-both">原文+译文</button>
+                        <div class="content-grid">
+                            <div class="input-section">
+                                <label for="cn-input-3">中文文本</label>
+                                <textarea id="cn-input-3" placeholder="请输入要翻译的中文内容..."></textarea>
+                            </div>
+
+                            <div class="settings-section">
+                                <div class="setting-group">
+                                    <label>选择翻译角色</label>
+                                    <div class="radio-group">
+                                        <label class="radio-option" title="权威但友善的群聊风格，适合男性教授在投资群中分享见解">
+                                            <input type="radio" name="role-3" value="male-professor" checked>
+                                            <span>👨‍🎓 男教授</span>
+                                        </label>
+                                        <label class="radio-option" title="权威但温和的群聊风格，适合女性教授在投资群中提供指导">
+                                            <input type="radio" name="role-3" value="female-professor">
+                                            <span>👩‍🎓 女教授</span>
+                                        </label>
+                                        <label class="radio-option" title="热情主动的群聊风格，适合男性助理为群友提供帮助">
+                                            <input type="radio" name="role-3" value="male-assistant">
+                                            <span>👨‍💼 男助理</span>
+                                        </label>
+                                        <label class="radio-option" title="贴心细致的群聊风格，适合女性助理温馨提醒和帮助">
+                                            <input type="radio" name="role-3" value="female-assistant">
+                                            <span>👩‍💼 女助理</span>
+                                        </label>
+                                        <label class="radio-option" title="活跃幽默的群聊风格，能带动气氛引发互动">
+                                            <input type="radio" name="role-3" value="male-troll">
+                                            <span>🙋‍♂️ 男水军</span>
+                                        </label>
+                                        <label class="radio-option" title="活跃生动的群聊风格，善于活跃氛围制造话题">
+                                            <input type="radio" name="role-3" value="female-troll">
+                                            <span>🙋‍♀️ 女水军</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="output-section">
+                                <div class="output-group">
+                                    <label>德语译文 <span style="color: #6b7280; font-size: 0.8rem;">(可编辑)</span></label>
+                                    <textarea id="de-output-3" placeholder="德语翻译结果将显示在这里..."></textarea>
+                                    <div id="pronoun-info-3" class="pronoun-info"></div>
+                                </div>
+
+                                <div class="output-group">
+                                    <label>回译检查</label>
+                                    <textarea id="back-translation-3" readonly placeholder="德语回译成中文的结果..."></textarea>
+                                    <div id="back-translation-note-3" class="pronoun-info" style="display: none;">人称判断以左侧备注为准</div>
+                                </div>
+                            </div>
+
+                            <div class="action-section">
+                                <div class="btn-group">
+                                    <button class="btn btn-secondary" id="remove-comments-btn-3">
+                                        <span class="btn-icon">🧹</span>
+                                        去除备注
+                                    </button>
+                                    <button class="btn btn-primary" id="translate-btn-3">
+                                        <span class="btn-icon">🔄</span>
+                                        翻译
+                                    </button>
+                                    <button class="btn btn-secondary" id="clear-btn-3">
+                                        <span class="btn-icon">🗑️</span>
+                                        清空
+                                    </button>
+                                    <button class="btn btn-secondary" id="retranslate-btn-3">
+                                        <span class="btn-icon">🔄</span>
+                                        重新翻译
+                                    </button>
+                                    <button class="btn btn-secondary" id="du-sie-switch-btn-3" disabled>
+                                        <span class="btn-icon">🔄</span>
+                                        你您切换
+                                    </button>
+                                    <button class="btn btn-secondary" id="remove-dash-btn-3" disabled>
+                                        <span class="btn-icon">✂️</span>
+                                        去短横线
+                                    </button>
+                                    <button class="btn btn-secondary" id="remove-emoji-btn-3" disabled>
+                                        <span class="btn-icon">😶</span>
+                                        去除表情
+                                    </button>
+                                </div>
+                                
+                                <div class="copy-group">
+                                    <label>一键复制</label>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline" id="copy-original-3">原文</button>
+                                        <button class="btn btn-outline" id="copy-translation-3">译文</button>
+                                        <button class="btn btn-outline" id="copy-both-3">原文+译文</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

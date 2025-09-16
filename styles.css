@@ -14,7 +14,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
     min-height: 100vh;
     background: rgba(255, 255, 255, 0.95);
@@ -117,6 +117,7 @@ body {
 .module-header {
     text-align: center;
     margin-bottom: 2rem;
+    position: relative;
 }
 
 .module-header h2 {
@@ -129,6 +130,150 @@ body {
 .module-desc {
     color: #6b7280;
     font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+/* 添加任务按钮 */
+.add-task-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.add-task-btn:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.add-task-btn .btn-icon {
+    font-size: 1rem;
+}
+
+/* 多任务容器 */
+.multi-task-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    transition: all 0.3s ease;
+}
+
+/* 当有多个任务时，显示为并排布局 */
+.multi-task-container.multi-column {
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+}
+
+/* 任务区域 */
+.task-area {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.task-area:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 任务头部 */
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.task-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* 删除任务按钮 */
+.remove-task-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.remove-task-btn:hover {
+    background: #fecaca;
+    transform: scale(1.1);
+}
+
+.remove-task-btn:active {
+    transform: scale(0.95);
+}
+
+/* 任务加载状态样式 */
+.task-loading {
+    border-color: #3b82f6 !important;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.task-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    animation: taskLoadingShimmer 2s infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes taskLoadingShimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* 加载中按钮样式 */
+.task-loading .btn:disabled {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    color: white !important;
+    opacity: 1 !important;
+    cursor: not-allowed !important;
+    animation: buttonPulse 1.5s infinite;
+}
+
+@keyframes buttonPulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
 }
 
 /* 内容布局 */
@@ -136,12 +281,57 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto;
-    gap: 1.5rem;
+    gap: 1rem;
     grid-template-areas: 
         "settings"
         "input"
         "output"
         "actions";
+}
+
+/* 任务区域内的内容布局 - 更紧凑的设计 */
+.task-area .content-grid {
+    gap: 0.75rem;
+}
+
+/* 任务区域内的输出区域 - 垂直布局以节省空间 */
+.task-area .output-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+/* 任务区域内的textarea - 更小的高度 */
+.task-area textarea {
+    min-height: 120px;
+    font-size: 0.875rem;
+}
+
+/* 任务区域内的按钮组 - 更紧凑的布局 */
+.task-area .btn-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.task-area .btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* 任务区域内的单选按钮组 - 更紧凑 */
+.task-area .radio-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.task-area .radio-option {
+    font-size: 0.8rem;
+}
+
+.task-area .radio-option span {
+    font-size: 0.75rem;
 }
 
 .content-simple {
@@ -1458,5 +1648,91 @@ textarea::-webkit-scrollbar-thumb:hover {
     .detected-language {
         font-size: 0.8rem;
         padding: 0.2rem 0.4rem;
+    }
+}
+
+/* 多任务响应式设计 */
+@media (max-width: 1400px) {
+    .multi-task-container.multi-column {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .multi-task-container.multi-column {
+        grid-template-columns: 1fr;
+    }
+    
+    .task-area .radio-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .add-task-btn {
+        position: static;
+        margin-top: 1rem;
+        align-self: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        margin: 0;
+    }
+    
+    .task-area {
+        padding: 1rem;
+    }
+    
+    .task-area .btn-group {
+        gap: 0.25rem;
+    }
+    
+    .task-area .btn {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .task-area .copy-group .btn-group {
+        flex-direction: column;
+    }
+    
+    .task-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .task-title {
+        font-size: 1.1rem;
+    }
+    
+    .remove-task-btn {
+        align-self: flex-end;
+        margin-top: -0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .task-area {
+        padding: 0.75rem;
+    }
+    
+    .task-area textarea {
+        min-height: 100px;
+        font-size: 0.8rem;
+    }
+    
+    .task-area .radio-option span {
+        font-size: 0.7rem;
+    }
+    
+    .add-task-btn {
+        font-size: 0.8rem;
+        padding: 0.6rem 0.8rem;
     }
 } 
