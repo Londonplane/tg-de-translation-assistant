@@ -378,7 +378,7 @@ class TranslationApp {
                     'X-Title': 'Chinese-German-Translation-Assistant-Language-Detection'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -419,7 +419,7 @@ class TranslationApp {
                 'X-Title': 'Chinese-German-Translation-Assistant-DeToCn'
             },
             body: JSON.stringify({
-                model: 'google/gemini-2.5-flash',
+                model: 'anthropic/claude-3.5-sonnet',
                 messages: [{
                     role: 'user',
                     content: prompt
@@ -520,7 +520,7 @@ ${deOutput}
                     'X-Title': 'Chinese-German-Translation-Assistant-DuSie-Switch'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -615,7 +615,7 @@ ${deOutput}
                     'X-Title': 'Chinese-German-Translation-Assistant-Remove-Dash'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -707,7 +707,7 @@ ${deOutput}
                     'X-Title': 'Chinese-German-Translation-Assistant-Remove-Emoji'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -825,7 +825,7 @@ ${cnText}`;
                     'X-Title': 'Chinese-German-Translation-Assistant-Remove-Comments'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -902,7 +902,7 @@ ${cnText}`;
                     'X-Title': 'Chinese-German-Translation-Assistant-DuSie-Conversion'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -996,7 +996,7 @@ ${cnText}`;
                     'X-Title': 'Chinese-German-Translation-Assistant-Grammar-Check'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -1068,7 +1068,7 @@ ${cnText}`;
                     'X-Title': 'Chinese-German-Translation-Assistant-German-Helper'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'openai/gpt-4o-mini',
                     messages: [{
                         role: 'user',
                         content: prompt

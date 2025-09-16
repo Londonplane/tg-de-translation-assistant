@@ -100,9 +100,9 @@ open http://localhost:8000
 ## AI 模型和配置
 
 ### 基于角色的模型
-- **Gemini 2.5 Flash**：用于教授和公告助手角色
-- **Mistral Small 3.2**：用于助手角色和社交媒体人物
-- **模型选择**：在 `prompts-config.js` 中配置每个角色
+- **Claude 3.5 Sonnet**：用于所有翻译角色和功能模块（教授、助理、水军等）
+- **GPT-4o Mini**：专门用于德语助手模块
+- **模型选择**：在 `prompts-config.js` 中配置翻译角色，在 `script.js` 中配置德语助手
 
 ### API 集成
 - **OpenRouter**：翻译和聊天的主要 AI 服务

@@ -4,66 +4,66 @@
 const ROLE_PROMPTS = {
     // 男教授角色 - 权威但亲和的群聊风格
     "male-professor": {
-        model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现男性教授的语气，但严格按照原文内容翻译，不要自由发挥。"
+        model: "anthropic/claude-3.5-sonnet",
+        prompt: "Please translate the following Chinese directly into German, maintaining faithful word-for-word and sentence-by-sentence translation. Do not add, delete, or change the original meaning. The translation should accurately reflect the tone of a male professor, but strictly follow the original content without creative interpretation."
     },
 
     // 女教授角色 - 权威但亲和的群聊风格  
     "female-professor": {
-        model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现女性教授的语气，但严格按照原文内容翻译，不要自由发挥。"
+        model: "anthropic/claude-3.5-sonnet",
+        prompt: "Please translate the following Chinese directly into German, maintaining faithful word-for-word and sentence-by-sentence translation. Do not add, delete, or change the original meaning. The translation should accurately reflect the tone of a female professor, but strictly follow the original content without creative interpretation."
     },
 
     // 男助理角色 - 热情帮助的群聊风格
     "male-assistant": {
-        model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现男性助理的语气，但严格按照原文内容翻译，不要自由发挥。"
+        model: "anthropic/claude-3.5-sonnet",
+        prompt: "Please translate the following Chinese directly into German, maintaining faithful word-for-word and sentence-by-sentence translation. Do not add, delete, or change the original meaning. The translation should accurately reflect the tone of a male assistant, but strictly follow the original content without creative interpretation."
     },
 
     // 女助理角色 - 贴心帮助的群聊风格
     "female-assistant": {
-        model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现女性助理的语气，但严格按照原文内容翻译，不要自由发挥。"
+        model: "anthropic/claude-3.5-sonnet",
+        prompt: "Please translate the following Chinese directly into German, maintaining faithful word-for-word and sentence-by-sentence translation. Do not add, delete, or change the original meaning. The translation should accurately reflect the tone of a female assistant, but strictly follow the original content without creative interpretation."
     },
 
     // 男水军角色 - 活跃的群聊参与者
     "male-troll": {
-        model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现男性群友的语气，但严格按照原文内容翻译，不要自由发挥。"
+        model: "anthropic/claude-3.5-sonnet",
+        prompt: "Please translate the following Chinese directly into German, maintaining faithful word-for-word and sentence-by-sentence translation. Do not add, delete, or change the original meaning. The translation should accurately reflect the tone of a male group member, but strictly follow the original content without creative interpretation."
     },
 
     // 女水军角色 - 活跃的群聊参与者
     "female-troll": {
-        model: "mistralai/mistral-small-3.2-24b-instruct",
-        prompt: "请将以下中文直接翻译成德语，保持逐字逐句的忠实翻译，不要添加、删减或改变原文含义。翻译要准确体现女性群友的语气，但严格按照原文内容翻译，不要自由发挥。"
+        model: "anthropic/claude-3.5-sonnet",
+        prompt: "Please translate the following Chinese directly into German, maintaining faithful word-for-word and sentence-by-sentence translation. Do not add, delete, or change the original meaning. The translation should accurately reflect the tone of a female group member, but strictly follow the original content without creative interpretation."
     }
 };
 
 
-// 核心翻译规则（不可修改）
+// Core translation rules (immutable)
 const TRANSLATION_RULES = `
 
-KRITISCHE AUSGABE-REGELN:
-1. NUR die deutsche Übersetzung ausgeben - NICHTS ANDERES
-2. KEINE Anführungszeichen, Klammern, Kommentare, Erklärungen oder Formatierung
-3. KEINE einleitenden oder abschließenden Sätze wie "Hier ist die Übersetzung:"
-4. KEINE Metakommentare oder Zusatzbemerkungen
+CRITICAL OUTPUT RULES:
+1. Output ONLY the German translation - NOTHING ELSE
+2. NO quotation marks, brackets, comments, explanations, or formatting
+3. NO introductory or concluding sentences like "Here is the translation:"
+4. NO meta-comments or additional remarks
 
-IGNORIEREN UND NICHT ÜBERSETZEN:
-5. Nummern und Codes (wie 1.2.3., A.B.C.)
-6. Rollenangaben in eckigen Klammern [甲方说], [乙方回复] etc.
-7. Redaktionelle Notizen in runden Klammern (备注), (说明) etc.
-8. Editierungshinweise und Metakommentare
-9. Rollen-, Geschlechts- oder Altersangaben
+IGNORE AND DO NOT TRANSLATE:
+5. Numbers and codes (like 1.2.3., A.B.C.)
+6. Role indicators in square brackets [甲方说], [乙方回复] etc.
+7. Editorial notes in round brackets (备注), (说明) etc.
+8. Editing instructions and meta-comments
+9. Role, gender, or age specifications
 
-INHALTLICHE REGELN:
-10. „您"/„您好" → „Sie", „你"/„你好" → „Du" (kontextabhängig)
-11. Emoji nur übersetzen wenn im Original vorhanden - KEINE Emojis hinzufügen wenn im chinesischen Original keine sind
-12. Ohne Anrede im Original auch keine deutsche Anrede hinzufügen
-13. Originalstil und -länge beibehalten
-14. Technische Begriffe und Eigennamen unverändert lassen
+CONTENT RULES:
+10. "您"/"您好" → "Sie", "你"/"你好" → "Du" (context-dependent)
+11. Only translate emojis if present in original - DO NOT add emojis if none exist in the Chinese original
+12. If no greeting in original, do not add German greeting
+13. Maintain original style and length
+14. Leave technical terms and proper names unchanged
 
-AUSGABE: Nur der übersetzte deutsche Text, sonst absolut nichts.
+OUTPUT: Only the translated German text, absolutely nothing else.
 
 `;
 
@@ -77,10 +77,10 @@ function buildCompletePrompt(role, text, vocabulary = []) {
     // 构建词汇表部分
     let vocabularySection = '';
     if (vocabulary && vocabulary.length > 0) {
-        vocabularySection = `\n\n专业词汇固定对照表：\n${vocabulary.map(item => `"${item.chinese}" → "${item.german}"`).join('\n')}\n\n请在翻译时优先使用上述词汇表中的对应翻译。`;
+        vocabularySection = `\n\nProfessional vocabulary fixed correspondence table:\n${vocabulary.map(item => `"${item.chinese}" → "${item.german}"`).join('\n')}\n\nPlease prioritize using the corresponding translations from the vocabulary table above when translating.`;
     }
 
-    return config.prompt + TRANSLATION_RULES + vocabularySection + `\n请翻译以下中文：${text}`;
+    return config.prompt + TRANSLATION_RULES + vocabularySection + `\nPlease translate the following Chinese: ${text}`;
 }
 
 // 获取模型配置

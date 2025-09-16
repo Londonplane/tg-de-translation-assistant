@@ -749,7 +749,7 @@ class APIIntegration {
                     'X-Title': 'Chinese-German-Translation-Assistant'
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{
                         role: 'user',
                         content: `请将以下德语文本翻译成中文，只输出中文翻译结果，不要添加任何解释：\n\n${germanText}`
