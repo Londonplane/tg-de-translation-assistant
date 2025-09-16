@@ -530,7 +530,7 @@ class TranslationApp {
                 removeEmojiBtn.disabled = false;
             }
             
-            this.showMessage(`任务${taskId}翻译完成！使用模型：${result.model}`, 'success');
+            this.showMessage(`任务${taskId}翻译完成！`, 'success');
         } catch (error) {
             this.showMessage(`任务${taskId}翻译失败：${error.message}`, 'error');
             console.error('Translation error:', error);
