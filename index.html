@@ -49,10 +49,16 @@
             <!-- 模块1: 中译德 -->
             <div id="cn-to-de" class="module active">
                 <div class="module-header">
-                    <button class="tutorial-btn" id="tutorial-btn" title="查看使用教程">
-                        <span class="btn-icon">📚</span>
-                        使用教程
-                    </button>
+                    <div class="header-left-buttons">
+                        <button class="tutorial-btn" id="tutorial-btn" title="查看使用教程">
+                            <span class="btn-icon">📚</span>
+                            使用教程
+                        </button>
+                        <button class="shortcut-btn" id="shortcut-btn" title="设置快捷键">
+                            <span class="btn-icon">⌨️</span>
+                            快捷键设置
+                        </button>
+                    </div>
                     <h2>中文翻译成德语</h2>
                     <p class="module-desc">选择角色和场景，获得精准的德语翻译</p>
                     <button class="add-task-btn" id="add-task-btn" title="添加新的翻译任务">
@@ -833,6 +839,24 @@
                     </div>
 
                     <div class="tutorial-section">
+                        <h4>⌨️ 快捷键设置</h4>
+                        <div class="tutorial-shortcuts">
+                            <div class="shortcut-demo">
+                                <span class="button-demo btn-demo accent">⌨️ 快捷键设置</span>
+                                <p>点击左上角快捷键设置按钮，为常用功能自定义快捷键</p>
+                            </div>
+                            <div class="shortcut-features">
+                                <ul>
+                                    <li><strong>智能录制</strong>：点击输入框后按下组合键即可设置</li>
+                                    <li><strong>冲突检测</strong>：系统会自动检测并提示快捷键冲突</li>
+                                    <li><strong>持久保存</strong>：设置自动保存，页面刷新后保持</li>
+                                    <li><strong>多任务支持</strong>：快捷键自动作用于当前活跃任务</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tutorial-section">
                         <h4>⚡ 使用技巧</h4>
                         <ul class="tutorial-tips">
                             <li><strong>多任务并行</strong>：点击"添加任务"可同时处理多个文本</li>
@@ -841,7 +865,7 @@
                             <li><strong>词汇表</strong>：点击右下角📚按钮管理专业术语</li>
                             <li><strong>人称检测</strong>：翻译后会在德语译文标签右侧显示使用的人称形式</li>
                             <li><strong>结果计时</strong>：翻译完成后会在中文文本标签右侧显示结果获得时间，最长计时20分钟</li>
-                            <li><strong>快捷键</strong>：Ctrl+Enter 快速执行翻译</li>
+                            <li><strong>快捷键</strong>：Ctrl+Enter 快速执行翻译，点击"⌨️ 快捷键设置"自定义更多快捷键</li>
                         </ul>
                     </div>
 
@@ -859,6 +883,158 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-primary" id="close-tutorial">开始使用</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷键设置模态框 -->
+        <div id="shortcut-modal" class="modal hidden">
+            <div class="modal-content shortcut-modal-content">
+                <div class="modal-header">
+                    <h3>⌨️ 快捷键设置</h3>
+                    <button class="close-btn" id="close-shortcut-modal">&times;</button>
+                </div>
+                <div class="modal-body shortcut-modal-body">
+                    <div class="shortcut-section">
+                        <h4>🎯 功能说明</h4>
+                        <p>为常用功能设置快捷键，提高翻译效率。点击输入框后按下组合键即可设置（支持 Ctrl/Alt/Shift + 字母/数字）。</p>
+                    </div>
+
+                    <div class="shortcut-section">
+                        <h4>🔄 翻译功能</h4>
+                        <div class="shortcut-items">
+                            <div class="shortcut-item">
+                                <label>翻译</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-translate" data-action="translate" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-translate">×</button>
+                                </div>
+                                <small>执行中译德翻译</small>
+                            </div>
+                            <div class="shortcut-item">
+                                <label>重新翻译</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-retranslate" data-action="retranslate" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-retranslate">×</button>
+                                </div>
+                                <small>重新执行翻译</small>
+                            </div>
+                            <div class="shortcut-item">
+                                <label>去除备注</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-remove-comments" data-action="remove-comments" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-remove-comments">×</button>
+                                </div>
+                                <small>清洗中文原文备注</small>
+                            </div>
+                            <div class="shortcut-item">
+                                <label>清空</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-clear" data-action="clear" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-clear">×</button>
+                                </div>
+                                <small>清空所有内容</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-section">
+                        <h4>🔧 文本处理</h4>
+                        <div class="shortcut-items">
+                            <div class="shortcut-item">
+                                <label>你您切换</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-du-sie" data-action="du-sie" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-du-sie">×</button>
+                                </div>
+                                <small>Du/Sie 人称转换</small>
+                            </div>
+                            <div class="shortcut-item">
+                                <label>去短横线</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-remove-dash" data-action="remove-dash" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-remove-dash">×</button>
+                                </div>
+                                <small>移除德语中的短横线</small>
+                            </div>
+                            <div class="shortcut-item">
+                                <label>去除表情</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-remove-emoji" data-action="remove-emoji" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-remove-emoji">×</button>
+                                </div>
+                                <small>移除表情符号</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-section">
+                        <h4>📋 复制功能</h4>
+                        <div class="shortcut-items">
+                            <div class="shortcut-item">
+                                <label>复制原文</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-copy-original" data-action="copy-original" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-copy-original">×</button>
+                                </div>
+                                <small>复制中文原文</small>
+                            </div>
+                            <div class="shortcut-item">
+                                <label>复制译文</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-copy-translation" data-action="copy-translation" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-copy-translation">×</button>
+                                </div>
+                                <small>复制德语译文</small>
+                            </div>
+                            <div class="shortcut-item">
+                                <label>复制原文+译文</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-copy-both" data-action="copy-both" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-copy-both">×</button>
+                                </div>
+                                <small>复制中德文对照</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-section">
+                        <h4>📝 任务管理</h4>
+                        <div class="shortcut-items">
+                            <div class="shortcut-item">
+                                <label>添加任务</label>
+                                <div class="shortcut-input-group">
+                                    <input type="text" class="shortcut-input" id="shortcut-add-task" data-action="add-task" placeholder="点击后按快捷键" readonly>
+                                    <button class="clear-shortcut" data-target="shortcut-add-task">×</button>
+                                </div>
+                                <small>添加新的翻译任务</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-section">
+                        <h4>💡 使用说明</h4>
+                        <div class="shortcut-help">
+                            <ul>
+                                <li><strong>设置方法</strong>：点击输入框，然后按下组合键（如 Ctrl+T、Alt+C 等）</li>
+                                <li><strong>支持组合</strong>：Ctrl、Alt、Shift + 字母/数字/功能键</li>
+                                <li><strong>冲突检测</strong>：系统会自动检测并提示快捷键冲突</li>
+                                <li><strong>多任务</strong>：快捷键会作用于当前激活的任务</li>
+                                <li><strong>清除设置</strong>：点击输入框右侧的 × 清除快捷键</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-section">
+                        <h4>⚠️ 当前快捷键冲突</h4>
+                        <div id="shortcut-conflicts" class="shortcut-conflicts" style="display: none;">
+                            <!-- 冲突信息将在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="reset-shortcuts">重置所有</button>
+                    <button class="btn btn-primary" id="save-shortcuts">保存设置</button>
                 </div>
             </div>
         </div>

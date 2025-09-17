@@ -1,3 +1,205 @@
+// 快捷键管理器
+class ShortcutManager {
+    constructor() {
+        this.shortcuts = new Map(); // 存储快捷键映射
+        this.isRecording = false;
+        this.recordingInput = null;
+        this.defaultShortcuts = {
+            'translate': 'Ctrl+Enter',
+            'retranslate': '',
+            'remove-comments': '',
+            'clear': '',
+            'du-sie': '',
+            'remove-dash': '',
+            'remove-emoji': '',
+            'copy-original': '',
+            'copy-translation': '',
+            'copy-both': '',
+            'add-task': ''
+        };
+        this.loadShortcuts();
+    }
+
+    // 从localStorage加载快捷键设置
+    loadShortcuts() {
+        try {
+            const saved = localStorage.getItem('customShortcuts');
+            if (saved) {
+                const shortcuts = JSON.parse(saved);
+                this.shortcuts = new Map(Object.entries(shortcuts));
+            } else {
+                // 使用默认快捷键
+                this.shortcuts = new Map(Object.entries(this.defaultShortcuts));
+            }
+        } catch (error) {
+            console.warn('加载快捷键设置失败:', error);
+            this.shortcuts = new Map(Object.entries(this.defaultShortcuts));
+        }
+    }
+
+    // 保存快捷键设置到localStorage
+    saveShortcuts() {
+        try {
+            const shortcutsObj = Object.fromEntries(this.shortcuts);
+            localStorage.setItem('customShortcuts', JSON.stringify(shortcutsObj));
+        } catch (error) {
+            console.error('保存快捷键设置失败:', error);
+        }
+    }
+
+    // 格式化快捷键显示
+    formatShortcut(keys) {
+        if (!keys) return '';
+        
+        const parts = keys.split('+');
+        const formatted = parts.map(part => {
+            switch (part.toLowerCase()) {
+                case 'ctrl':
+                case 'control':
+                    return 'Ctrl';
+                case 'alt':
+                    return 'Alt';
+                case 'shift':
+                    return 'Shift';
+                case 'meta':
+                case 'cmd':
+                    return 'Cmd';
+                default:
+                    return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+            }
+        });
+        return formatted.join('+');
+    }
+
+    // 将键盘事件转换为快捷键字符串
+    eventToShortcut(event) {
+        const parts = [];
+        
+        if (event.ctrlKey) parts.push('Ctrl');
+        if (event.altKey) parts.push('Alt');
+        if (event.shiftKey) parts.push('Shift');
+        if (event.metaKey) parts.push('Cmd');
+        
+        const key = event.key;
+        
+        // 排除单纯的修饰键
+        if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
+            return '';
+        }
+        
+        // 特殊键处理
+        switch (key) {
+            case ' ':
+                parts.push('Space');
+                break;
+            case 'Enter':
+                parts.push('Enter');
+                break;
+            case 'Escape':
+                parts.push('Esc');
+                break;
+            case 'Backspace':
+                parts.push('Backspace');
+                break;
+            case 'Delete':
+                parts.push('Delete');
+                break;
+            case 'Tab':
+                parts.push('Tab');
+                break;
+            case 'ArrowUp':
+                parts.push('↑');
+                break;
+            case 'ArrowDown':
+                parts.push('↓');
+                break;
+            case 'ArrowLeft':
+                parts.push('←');
+                break;
+            case 'ArrowRight':
+                parts.push('→');
+                break;
+            default:
+                if (key.length === 1) {
+                    parts.push(key.toUpperCase());
+                } else {
+                    parts.push(key);
+                }
+        }
+        
+        return parts.join('+');
+    }
+
+    // 检查快捷键冲突
+    checkConflicts(action, shortcut) {
+        const conflicts = [];
+        
+        for (const [existingAction, existingShortcut] of this.shortcuts) {
+            if (existingAction !== action && existingShortcut === shortcut && shortcut !== '') {
+                conflicts.push(existingAction);
+            }
+        }
+        
+        return conflicts;
+    }
+
+    // 设置快捷键
+    setShortcut(action, shortcut) {
+        const conflicts = this.checkConflicts(action, shortcut);
+        
+        if (conflicts.length > 0) {
+            return { success: false, conflicts };
+        }
+        
+        this.shortcuts.set(action, shortcut);
+        this.saveShortcuts();
+        return { success: true, conflicts: [] };
+    }
+
+    // 获取快捷键
+    getShortcut(action) {
+        return this.shortcuts.get(action) || '';
+    }
+
+    // 清除快捷键
+    clearShortcut(action) {
+        this.shortcuts.set(action, '');
+        this.saveShortcuts();
+    }
+
+    // 重置所有快捷键
+    resetAllShortcuts() {
+        this.shortcuts = new Map(Object.entries(this.defaultShortcuts));
+        this.saveShortcuts();
+    }
+
+    // 获取所有快捷键
+    getAllShortcuts() {
+        return Object.fromEntries(this.shortcuts);
+    }
+
+    // 检查事件是否匹配某个快捷键
+    matchesShortcut(event, shortcut) {
+        if (!shortcut) return false;
+        
+        const eventShortcut = this.eventToShortcut(event);
+        return eventShortcut === shortcut;
+    }
+
+    // 查找匹配的动作
+    findMatchingAction(event) {
+        const eventShortcut = this.eventToShortcut(event);
+        
+        for (const [action, shortcut] of this.shortcuts) {
+            if (shortcut && shortcut === eventShortcut) {
+                return action;
+            }
+        }
+        
+        return null;
+    }
+}
+
 // 多任务管理器
 class MultiTaskManager {
     constructor() {
@@ -314,6 +516,7 @@ class TranslationApp {
         this.currentImageData = null; // 当前上传的图片数据
         this.originalTextBackup = null; // 原文备份（保留向后兼容）
         this.multiTaskManager = new MultiTaskManager(); // 多任务管理器
+        this.shortcutManager = new ShortcutManager(); // 快捷键管理器
         this.init();
     }
 
@@ -377,6 +580,9 @@ class TranslationApp {
         
         // 教程模态框事件
         this.setupTutorialEvents();
+        
+        // 快捷键设置事件
+        this.setupShortcutEvents();
     }
 
     // 中译德模块事件
@@ -614,6 +820,376 @@ class TranslationApp {
             // 恢复背景滚动
             document.body.style.overflow = '';
         }
+    }
+
+    // 快捷键设置事件
+    setupShortcutEvents() {
+        const shortcutBtn = document.getElementById('shortcut-btn');
+        const shortcutModal = document.getElementById('shortcut-modal');
+        const closeShortcutModal = document.getElementById('close-shortcut-modal');
+        const saveShortcuts = document.getElementById('save-shortcuts');
+        const resetShortcuts = document.getElementById('reset-shortcuts');
+
+        // 打开快捷键设置模态框
+        shortcutBtn?.addEventListener('click', () => this.showShortcutModal());
+
+        // 关闭快捷键设置模态框 - X按钮
+        closeShortcutModal?.addEventListener('click', () => this.hideShortcutModal());
+
+        // 保存快捷键设置
+        saveShortcuts?.addEventListener('click', () => this.saveShortcutSettings());
+
+        // 重置快捷键设置
+        resetShortcuts?.addEventListener('click', () => this.resetShortcutSettings());
+
+        // 点击模态框背景关闭
+        shortcutModal?.addEventListener('click', (e) => {
+            if (e.target === shortcutModal) {
+                this.hideShortcutModal();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !shortcutModal?.classList.contains('hidden')) {
+                this.hideShortcutModal();
+            }
+        });
+
+        // 设置快捷键输入框事件
+        this.setupShortcutInputs();
+    }
+
+    // 显示快捷键设置模态框
+    showShortcutModal() {
+        const shortcutModal = document.getElementById('shortcut-modal');
+        if (shortcutModal) {
+            this.loadCurrentShortcuts(); // 加载当前快捷键设置
+            shortcutModal.classList.remove('hidden');
+            // 防止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    // 隐藏快捷键设置模态框
+    hideShortcutModal() {
+        const shortcutModal = document.getElementById('shortcut-modal');
+        if (shortcutModal) {
+            shortcutModal.classList.add('hidden');
+            // 恢复背景滚动
+            document.body.style.overflow = '';
+            // 清除录制状态
+            this.clearRecordingState();
+        }
+    }
+
+    // 设置快捷键输入框事件
+    setupShortcutInputs() {
+        const shortcutInputs = document.querySelectorAll('.shortcut-input');
+        const clearButtons = document.querySelectorAll('.clear-shortcut');
+
+        // 为每个快捷键输入框设置事件
+        shortcutInputs.forEach(input => {
+            input.addEventListener('focus', (e) => this.startRecording(e.target));
+            input.addEventListener('blur', (e) => this.stopRecording(e.target));
+            input.addEventListener('keydown', (e) => this.handleShortcutKeyDown(e));
+        });
+
+        // 为清除按钮设置事件
+        clearButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetId = button.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input) {
+                    this.clearShortcutInput(input);
+                }
+            });
+        });
+    }
+
+    // 加载当前快捷键设置
+    loadCurrentShortcuts() {
+        const shortcuts = this.shortcutManager.getAllShortcuts();
+        
+        for (const [action, shortcut] of Object.entries(shortcuts)) {
+            const input = document.getElementById(`shortcut-${action}`);
+            if (input) {
+                input.value = this.shortcutManager.formatShortcut(shortcut);
+                if (shortcut) {
+                    input.classList.add('set');
+                } else {
+                    input.classList.remove('set');
+                }
+            }
+        }
+
+        // 检查并显示冲突
+        this.updateConflictDisplay();
+    }
+
+    // 开始录制快捷键
+    startRecording(input) {
+        this.shortcutManager.isRecording = true;
+        this.shortcutManager.recordingInput = input;
+        
+        input.classList.add('recording');
+        input.value = '按下快捷键...';
+        input.placeholder = '按下快捷键组合';
+    }
+
+    // 停止录制快捷键
+    stopRecording(input) {
+        if (this.shortcutManager.isRecording && this.shortcutManager.recordingInput === input) {
+            this.shortcutManager.isRecording = false;
+            this.shortcutManager.recordingInput = null;
+            
+            input.classList.remove('recording');
+            
+            // 如果没有设置快捷键，恢复原状
+            if (input.value === '按下快捷键...') {
+                const action = input.getAttribute('data-action');
+                const currentShortcut = this.shortcutManager.getShortcut(action);
+                input.value = this.shortcutManager.formatShortcut(currentShortcut);
+            }
+        }
+    }
+
+    // 处理快捷键按下
+    handleShortcutKeyDown(event) {
+        if (!this.shortcutManager.isRecording) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const shortcut = this.shortcutManager.eventToShortcut(event);
+        const input = this.shortcutManager.recordingInput;
+        const action = input.getAttribute('data-action');
+
+        if (shortcut) {
+            // 检查冲突
+            const conflicts = this.shortcutManager.checkConflicts(action, shortcut);
+            
+            if (conflicts.length > 0) {
+                input.classList.add('conflict');
+                input.value = `冲突: ${this.shortcutManager.formatShortcut(shortcut)}`;
+                setTimeout(() => {
+                    input.classList.remove('conflict');
+                    input.value = this.shortcutManager.formatShortcut(this.shortcutManager.getShortcut(action));
+                }, 2000);
+            } else {
+                input.value = this.shortcutManager.formatShortcut(shortcut);
+                input.classList.add('set');
+                input.classList.remove('recording');
+                
+                // 临时保存（实际保存在点击"保存设置"时）
+                input.setAttribute('data-temp-shortcut', shortcut);
+                
+                this.shortcutManager.isRecording = false;
+                this.shortcutManager.recordingInput = null;
+                input.blur();
+            }
+        }
+    }
+
+    // 清除快捷键输入
+    clearShortcutInput(input) {
+        const action = input.getAttribute('data-action');
+        input.value = '';
+        input.classList.remove('set', 'conflict');
+        input.setAttribute('data-temp-shortcut', '');
+        input.placeholder = '点击后按快捷键';
+    }
+
+    // 清除录制状态
+    clearRecordingState() {
+        if (this.shortcutManager.isRecording && this.shortcutManager.recordingInput) {
+            this.stopRecording(this.shortcutManager.recordingInput);
+        }
+    }
+
+    // 保存快捷键设置
+    saveShortcutSettings() {
+        const inputs = document.querySelectorAll('.shortcut-input');
+        let hasConflicts = false;
+        
+        // 收集所有临时设置的快捷键
+        const tempShortcuts = new Map();
+        inputs.forEach(input => {
+            const action = input.getAttribute('data-action');
+            const tempShortcut = input.getAttribute('data-temp-shortcut');
+            if (tempShortcut !== null) {
+                tempShortcuts.set(action, tempShortcut);
+            } else {
+                tempShortcuts.set(action, this.shortcutManager.getShortcut(action));
+            }
+        });
+
+        // 检查冲突
+        for (const [action, shortcut] of tempShortcuts) {
+            if (shortcut) {
+                const conflicts = [];
+                for (const [otherAction, otherShortcut] of tempShortcuts) {
+                    if (otherAction !== action && otherShortcut === shortcut) {
+                        conflicts.push(otherAction);
+                    }
+                }
+                
+                if (conflicts.length > 0) {
+                    hasConflicts = true;
+                    break;
+                }
+            }
+        }
+
+        if (hasConflicts) {
+            this.showMessage('存在快捷键冲突，请先解决冲突后再保存', 'error');
+            this.updateConflictDisplay();
+            return;
+        }
+
+        // 保存所有快捷键
+        for (const [action, shortcut] of tempShortcuts) {
+            this.shortcutManager.setShortcut(action, shortcut);
+        }
+
+        // 清除临时属性
+        inputs.forEach(input => {
+            input.removeAttribute('data-temp-shortcut');
+        });
+
+        this.updateConflictDisplay();
+        this.showMessage('快捷键设置已保存！', 'success');
+        this.hideShortcutModal();
+    }
+
+    // 重置快捷键设置
+    resetShortcutSettings() {
+        if (confirm('确定要重置所有快捷键为默认设置吗？')) {
+            this.shortcutManager.resetAllShortcuts();
+            this.loadCurrentShortcuts();
+            this.showMessage('快捷键设置已重置为默认值', 'success');
+        }
+    }
+
+    // 更新冲突显示
+    updateConflictDisplay() {
+        const conflictsContainer = document.getElementById('shortcut-conflicts');
+        const inputs = document.querySelectorAll('.shortcut-input');
+        const conflicts = [];
+
+        // 检查冲突
+        const shortcuts = new Map();
+        inputs.forEach(input => {
+            const action = input.getAttribute('data-action');
+            const tempShortcut = input.getAttribute('data-temp-shortcut');
+            const shortcut = tempShortcut !== null ? tempShortcut : this.shortcutManager.getShortcut(action);
+            
+            if (shortcut) {
+                if (shortcuts.has(shortcut)) {
+                    conflicts.push({
+                        shortcut,
+                        actions: [shortcuts.get(shortcut), action]
+                    });
+                } else {
+                    shortcuts.set(shortcut, action);
+                }
+            }
+        });
+
+        if (conflicts.length > 0) {
+            conflictsContainer.innerHTML = conflicts.map(conflict => 
+                `<div class="conflict-item">
+                    <strong>${this.shortcutManager.formatShortcut(conflict.shortcut)}</strong> 
+                    被以下功能重复使用：${conflict.actions.join('、')}
+                </div>`
+            ).join('');
+            conflictsContainer.style.display = 'block';
+            conflictsContainer.classList.add('has-conflicts');
+        } else {
+            conflictsContainer.style.display = 'none';
+            conflictsContainer.classList.remove('has-conflicts');
+        }
+    }
+
+    // 执行快捷键动作
+    executeShortcutAction(action) {
+        // 确保在中译德模块中
+        if (this.currentModule !== 'cn-to-de') {
+            // 如果是翻译动作，切换到中译德模块
+            if (action === 'translate' || action === 'retranslate') {
+                this.switchModule('cn-to-de');
+            } else {
+                return; // 其他动作只在中译德模块中有效
+            }
+        }
+
+        // 获取当前激活的任务ID（默认为1）
+        const activeTaskId = this.getActiveTaskId();
+
+        switch (action) {
+            case 'translate':
+                this.handleCnToDeTranslation(activeTaskId);
+                break;
+            case 'retranslate':
+                this.handleCnToDeTranslation(activeTaskId);
+                break;
+            case 'remove-comments':
+                this.handleRemoveComments(activeTaskId);
+                break;
+            case 'clear':
+                this.clearCnToDeFields(activeTaskId);
+                break;
+            case 'du-sie':
+                this.handleDuSieSwitch(activeTaskId);
+                break;
+            case 'remove-dash':
+                this.handleRemoveDash(activeTaskId);
+                break;
+            case 'remove-emoji':
+                this.handleRemoveEmoji(activeTaskId);
+                break;
+            case 'copy-original':
+                this.copyToClipboard(`cn-input-${activeTaskId}`);
+                break;
+            case 'copy-translation':
+                this.copyToClipboard(`de-output-${activeTaskId}`);
+                break;
+            case 'copy-both':
+                this.copyBoth(activeTaskId);
+                break;
+            case 'add-task':
+                this.handleAddTask();
+                break;
+            default:
+                console.warn('未知的快捷键动作:', action);
+        }
+    }
+
+    // 获取当前激活的任务ID
+    getActiveTaskId() {
+        // 优先返回最后一个有内容的任务
+        for (let taskId = 3; taskId >= 1; taskId--) {
+            const taskArea = document.getElementById(`task-area-${taskId}`);
+            if (taskArea && taskArea.style.display !== 'none') {
+                const cnInput = document.getElementById(`cn-input-${taskId}`);
+                const deOutput = document.getElementById(`de-output-${taskId}`);
+                
+                // 如果有内容，优先选择这个任务
+                if (cnInput?.value.trim() || deOutput?.value.trim()) {
+                    return taskId;
+                }
+            }
+        }
+
+        // 如果没有找到有内容的任务，返回第一个可见的任务
+        for (let taskId = 1; taskId <= 3; taskId++) {
+            const taskArea = document.getElementById(`task-area-${taskId}`);
+            if (taskArea && taskArea.style.display !== 'none') {
+                return taskId;
+            }
+        }
+
+        return 1; // 默认返回任务1
     }
 
     // 德语文本编辑处理（自动回译）
@@ -2087,28 +2663,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 键盘快捷键支持
 document.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + Enter 在各模块中触发主要操作
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        const app = window.translationApp;
-        if (!app) return;
+    const app = window.translationApp;
+    if (!app || !app.shortcutManager) return;
 
-        switch (app.currentModule) {
-            case 'cn-to-de':
-                document.getElementById('translate-btn')?.click();
-                break;
-            case 'de-to-cn':
-                document.getElementById('de-to-cn-translate')?.click();
-                break;
-            case 'ocr-recognition':
-                document.getElementById('ocr-recognize')?.click();
-                break;
-            case 'grammar-check':
-                document.getElementById('check-grammar')?.click();
-                break;
-            case 'assistant':
-                document.getElementById('ask-assistant')?.click();
-                break;
-        }
-    }
+    // 如果正在录制快捷键，不处理
+    if (app.shortcutManager.isRecording) return;
+
+    // 查找匹配的动作
+    const action = app.shortcutManager.findMatchingAction(e);
+    if (!action) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 根据动作执行相应的功能
+    app.executeShortcutAction(action);
 }); 
